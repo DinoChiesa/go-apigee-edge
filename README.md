@@ -44,7 +44,7 @@ This project is a work-in-progress. Here's the status:
 
 | entity type   | implemented              | not implemented yet
 | :------------ | :----------------------- | :--------------------
-| apis          | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy | inquire deployment status
+| apis          | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy, inquire deployment status | 
 | apiproducts   | | list, query, create, delete, modify description, modify approvalType, modify scopes, add or remove proxy, add or remove custom attrs, modify public/private, change quota | 
 | developers    | | list, query, make active or inactive, create, delete, modify custom attrs | 
 | developer app | | list, query, create, delete, revoke, approve, add new credential, remove credential | modify custom attrs
@@ -140,6 +140,8 @@ func main() {
 
 * When importing from a source directory, the library creates a temporary zip file, but doesn't delete the file.
 
-* There is no working client code included in the distribution here. 
+* There is no working code for example clients, included in the distribution here. 
 
 * There is no package versioning strategy (eg, no use of GoPkg.in)
+
+* When deploying a proxy, there's no way to specify the override and delay parameters.

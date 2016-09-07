@@ -75,7 +75,7 @@ type ListOptions struct {
   Expand bool `url:"expand"`
 }
 
-// wrap the standard http.Response returned from Apigee Edge
+// wrap the standard http.Response returned from Apigee Edge. (why?)
 type Response struct {
   *http.Response
 }
