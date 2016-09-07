@@ -55,9 +55,6 @@ This project is a work-in-progress. Here's the status:
 
 Pull requests are welcomed.
 
-This is a work-in-progress.  Currently the only entity implemented is apiproxies. The library does: list, get details, import, delete, delete revision, deploy, undeploy.  Remaining to do: export. 
-
-
 
 ## Usage Examples
 
