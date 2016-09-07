@@ -15,7 +15,6 @@ import (
 
 const proxiesPath = "apis"
 
-
 // ProxiesService is an interface for interfacing with the Apigee Edge Admin API
 // dealing with apiproxies. 
 type ProxiesService interface {
@@ -26,6 +25,7 @@ type ProxiesService interface {
   DeleteRevision(string, Revision) (*ProxyRevision, *Response, error)
   Deploy(string,string,Revision) (*ProxyRevisionDeployment, *Response, error)
   Undeploy(string,string,Revision) (*ProxyRevisionDeployment, *Response, error)
+  // Export(string, string) (*ProxyRevision, *Response, error)
 }
 
 type ProxiesServiceOp struct {
@@ -34,12 +34,15 @@ type ProxiesServiceOp struct {
 
 var _ ProxiesService = &ProxiesServiceOp{}
 
+// Proxy contains information about an API Proxy within an Edge organization.
 type Proxy struct {
   Revisions   []Revision    `json:"revision,omitempty"`
   Name        string        `json:"name,omitempty"`
   MetaData    ProxyMetadata `json:"metaData,omitempty"`
 }
 
+// ProxyMetadata contains information related to the creation and last modified
+// time and actor for an API Proxy within an organization.
 type ProxyMetadata struct {
   LastModifiedBy  string     `json:"lastModifiedBy,omitempty"`
   CreatedBy       string     `json:"createdBy,omitempty"`
@@ -47,6 +50,7 @@ type ProxyMetadata struct {
   CreatedAt       Timestamp  `json:"createdAt,omitempty"`
 }
 
+// ProxyRevision holds information about a revision of an API Proxy. 
 type ProxyRevision struct {
   CreatedBy       string     `json:"createdBy,omitempty"`
   CreatedAt       Timestamp  `json:"createdAt,omitempty"`
@@ -65,43 +69,8 @@ type ProxyRevision struct {
   Type            string     `json:"type,omitempty"`
 }
 
-// {
-//   "createdAt" : 1473206030269,
-//   "createdBy" : "DChiesa@apigee.com",
-//   "description" : "",
-//   "displayName" : "ramnath-1",
-//   "name" : "proxyname1",
-//   "lastModifiedAt" : 1473206030269,
-//   "lastModifiedBy" : "DChiesa@apigee.com",
-//   "revision" : "1",
-//   "targetEndpoints" : [ "default" ],
-//   "targetServers" : [ ],
-//   "resources" : [ "jsc://injectHeader.js", "jsc://maybeFormatFault.js", "jsc://setTargetUrl.js" ],
-//   "proxyEndpoints" : [ "default" ],
-//   "policies" : [ "AM-CleanResponseHeaders", "JS-InjectHeader", "JS-MaybeFormatFault", "JS-SetTargetUrl", "RF-UnknownRequest" ],
-//   "contextInfo" : "Revision 1 of application proxyname1, in organization cap500",
-//   "type" : "Application",
-//
-//   "resourceFiles" : {
-//     "resourceFile" : [ {
-//       "name" : "injectHeader.js",
-//       "type" : "jsc"
-//     }, {
-//       "name" : "maybeFormatFault.js",
-//       "type" : "jsc"
-//     }, {
-//       "name" : "setTargetUrl.js",
-//       "type" : "jsc"
-//     } ]
-//   },
-//
-//   "configurationVersion" : {
-//     "majorVersion" : 4,
-//     "minorVersion" : 0
-//   }
-// }  
-
-
+// ProxyRevisionDeployment holds information about the deployment state of a
+// revision of an API Proxy.
 type ProxyRevisionDeployment struct {
   Name            string        `json:"aPIProxy,omitempty"`
   Revision        Revision      `json:"revision,omitempty"`
@@ -111,64 +80,31 @@ type ProxyRevisionDeployment struct {
   Servers         []EdgeServer  `json:"server,omitempty"`
 }
 
+// When inquiring the deployment status of an API PRoxy revision, even implicitly
+// as when performing a Deploy or Undeploy, the response includes the deployment
+// status for each particular Edge Server in the environment. This struct
+// deserializes that information. It will normally not be useful at all. In rare
+// cases, it may be useful in helping to diagnose problems.  For example, if there
+// is a problem with a deployment change, as when a Message Processor is
+// experiencing a problem and cannot undeploy, or more commonly, cannot deploy an
+// API Proxy, this struct will hold relevant information.
 type EdgeServer struct {
   Status          string        `json:"status,omitempty"`
   Uuid            string        `json:"uUID,omitempty"`
   Type            string        `json:"type,omitempty"`
 }
 
-// {
-//   "aPIProxy" : "ramnath-1",
-//   "name" : "6",
-//   "environment" : "test",
-//   "organization" : "cap500",
-//   "revision" : "6",
-//   "state" : "undeployed"
-//   "server" : [ {
-//     "status" : "undeployed",
-//     "type" : [ "message-processor" ],
-//     "uUID" : "a4850e3b-6ce9-482a-9521-d9869be8482e"
-//   }, {
-//     "status" : "undeployed",
-//     "type" : [ "router" ],
-//     "uUID" : "f0a80e0e-572c-46ad-b064-acac9ed1d870"
-//   } ],
-//
-//   "configuration" : {
-//     "basePath" : "/",
-//     "steps" : [ ]
-//   },
-// }
-
-
-
+// When Delete returns successfully, it returns a payload that contains very little useful
+// information. This struct deserializes that information.
 type DeletedProxyInfo struct {
   Name   string   `json:"name,omitempty"`
 }
-// {
-//   "configurationVersion" : {
-//     "majorVersion" : 4,
-//     "minorVersion" : 0
-//   },
-//   "contextInfo" : "Revision null of application -NA-, in organization -NA-",
-//   "name" : "ramnath-1",
-//   "policies" : [ ],
-//   "proxyEndpoints" : [ ],
-//   "resourceFiles" : {
-//     "resourceFile" : [ ]
-//   },
-//   "resources" : [ ],
-//   "targetEndpoints" : [ ],
-//   "targetServers" : [ ],
-//   "type" : "Application"
+
+// type proxiesRoot struct {
+//   Proxies []Proxy `json:"proxies"`
 // }
 
-
-type proxiesRoot struct {
-  Proxies []Proxy `json:"proxies"`
-}
-
-
+// List retrieves the list of apiproxy names for the organization referred by the EdgeClient. 
 func (s *ProxiesServiceOp) List() ([]string, *Response, error) {
   req, e := s.client.NewRequest("GET", proxiesPath, nil)
   if e != nil {
@@ -182,8 +118,8 @@ func (s *ProxiesServiceOp) List() ([]string, *Response, error) {
   return namelist, resp, e
 }
 
-
-
+// Get retrieves the information about an API Proxy in an organization, information including
+// the list of available revisions, and the created and last modified dates and actors.
 func (s *ProxiesServiceOp) Get(proxy string) (*Proxy, *Response, error) {
   path := path.Join(proxiesPath, proxy)
   req, e := s.client.NewRequest("GET", path, nil)
@@ -198,30 +134,6 @@ func (s *ProxiesServiceOp) Get(proxy string) (*Proxy, *Response, error) {
   return &returnedProxy, resp, e
 }
 
-// func (s *ProxiesServiceOp) ListExpanded() ([]Proxy, *Response, error) {
-//   root := new(proxiesRoot)
-//   origURL, err := url.Parse(proxiesPath)
-//   if err != nil {
-//     return root.Proxies, nil, err
-//   }
-//   q := origURL.Query()
-//   q.Add("expand", "true")
-//   origURL.RawQuery = q.Encode()
-//   path := origURL.String()
-// 
-//   req, e := s.client.NewRequest("GET", path, nil)
-//   if e != nil {
-//     return nil, nil, e
-//   }
-// 
-//   resp, e := s.client.Do(req, &root)
-//   if e != nil {
-//     return nil, resp, e
-//   }
-//   return root.Proxies, resp, e
-// }
-
-
 func smartFilter(path string) bool {
   if strings.HasSuffix(path, "~") {
     return false
@@ -231,7 +143,6 @@ func smartFilter(path string) bool {
   }
   return true
 }
-
 
 func zipDirectory (source string, target string, filter func(string) bool) error {
   zipfile, err := os.Create(target)
@@ -300,7 +211,11 @@ func zipDirectory (source string, target string, filter func(string) bool) error
 }
 
 
-
+// Import an API proxy into an organization, creating a new API Proxy revision.
+// The proxyName can be passed as "nil" in which case the name is derived from the source.
+// The source can be either a filesystem directory containing an exploded apiproxy bundle, OR
+// the path of a zip file containing an API Proxy bundle. Returns the API proxy revision information.
+// This method does not deploy the imported proxy. See the Deploy method. 
 func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevision, *Response, error) {
   info, err := os.Stat(source)
   if err != nil {
@@ -364,6 +279,8 @@ func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevisi
 }
 
 
+// DeleteRevision deletes a specific revision of an API Proxy from an organization.
+// The revision must exist, and must not be currently deployed. 
 func (s *ProxiesServiceOp) DeleteRevision(proxyName string, rev Revision) (*ProxyRevision, *Response, error) {
   path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev))
   req, e := s.client.NewRequest("DELETE", path, nil)
@@ -378,6 +295,7 @@ func (s *ProxiesServiceOp) DeleteRevision(proxyName string, rev Revision) (*Prox
   return &proxyRev, resp, e
 }
 
+// Undeploy a specific revision of an API Proxy from a particular environment within an Edge organization. 
 func (s *ProxiesServiceOp) Undeploy(proxyName, env string, rev Revision) (*ProxyRevisionDeployment, *Response, error) {
   path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev), "deployments")
   // append the query params
@@ -405,6 +323,7 @@ func (s *ProxiesServiceOp) Undeploy(proxyName, env string, rev Revision) (*Proxy
 }
 
 
+// Deploy a revision of an API proxy to a specific environment within an organization. 
 func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision) (*ProxyRevisionDeployment, *Response, error) {
   path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev), "deployments")
   // append the query params
@@ -434,6 +353,9 @@ func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision) (*ProxyRe
 }
 
 
+// Delete an API Proxy and all its revisions from an organization. This method
+// will fail if any of the revisions of the named API Proxy are currently deployed
+// in any environment.
 func (s *ProxiesServiceOp) Delete(proxyName string) (*DeletedProxyInfo, *Response, error) {
   path := path.Join(proxiesPath, proxyName)
   req, e := s.client.NewRequest("DELETE", path, nil)

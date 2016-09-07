@@ -137,7 +137,8 @@ func main() {
 
 ## Bugs
 
-There are embarrassingly few tests.
+* There are embarrassingly few tests.
 
-There are no reference docs.
+* When importing from a source directory, the library creates a temporary zip file, but doesn't delete the file.
 
+* There is no working client code included in the distribution here. 

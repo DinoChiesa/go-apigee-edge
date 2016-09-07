@@ -1,3 +1,4 @@
+// Package apigee provides a client for administering Apigee Edge. 
 package apigee
 
 import (
@@ -118,15 +119,32 @@ func addOptions(s string, opt interface{}) (string, error) {
 
 type EdgeClientOptions struct {
   httpClient *http.Client;
-  Org string;
+
+  // Optional. The Admin base URL. For example, if using OPDK this might be
+  // http://192.168.10.56:8080 . It defaults to https://api.enterprise.apigee.com
   MgmtUrl string
+
+  // Specify the Edge organization name. 
+  Org string;
+
+  // Required. Authentication information for the Edge Management server. 
   Auth EdgeAuth
+
+  // Optional. Warning: if set to true, HTTP Basic Auth base64 blobs will appear in output. 
   Debug bool
 }
 
+// EdgeAuth holds information about how to authenticate to the Edge Management server. 
 type EdgeAuth struct {
-  Username string
+  // Optional. The path to the .netrc file that holds credentials for the Edge Management server. 
+  // By default, this is ${HOME}/.netrc .  If you specify a Password, this option is ignored.
   NetrcPath string
+
+  // Optional. The username to use when authenticating to the Edge Management server.
+  // Ignored if you specify a NetrcPath. 
+  Username string
+
+  // Optional. Used if you explicitly specify a Password. 
   Password string
 }
 
@@ -149,10 +167,7 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
   c := &EdgeClient{client: httpClient, BaseURL: baseURL, UserAgent: userAgent}
   c.Proxies = &ProxiesServiceOp{client: c}
 
-  if o.Auth.Username == "" {
-    return nil, errors.New("you must pass a Username")
-  }
-
+  username := o.Auth.Username // this may be ""
   password := o.Auth.Password
   if o.Auth.Password == "" {
     netrcPath := o.Auth.NetrcPath
@@ -170,8 +185,9 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
       return nil, errors.New(msg)
     }
     password = machine.Password
+    username = machine.Login 
   }
-  c.auth = EdgeAuth{Username: o.Auth.Username, Password: password}
+  c.auth = EdgeAuth{Username: username, Password: password}
   if o.Debug {
     c.debug = true
     c.onRequestCompleted = func(req *http.Request, resp *http.Response)  {
