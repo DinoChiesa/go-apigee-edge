@@ -4,6 +4,7 @@ import (
   "archive/zip"
   "strings"
   "path"
+  "time"
   "path/filepath"
   "os"
   "fmt"
@@ -25,7 +26,7 @@ type ProxiesService interface {
   DeleteRevision(string, Revision) (*ProxyRevision, *Response, error)
   Deploy(string,string,Revision) (*ProxyRevisionDeployment, *Response, error)
   Undeploy(string,string,Revision) (*ProxyRevisionDeployment, *Response, error)
-  // Export(string, string) (*ProxyRevision, *Response, error)
+  Export(string, Revision) (string, *Response, error) 
 }
 
 type ProxiesServiceOp struct {
@@ -276,6 +277,48 @@ func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevisi
     return nil, resp, e
   }
   return &returnedProxyRevision, resp, e
+}
+
+
+
+// Export a revision of an API proxy within an organization, to a filesystem file. 
+func (s *ProxiesServiceOp) Export(proxyName string, rev Revision) (string, *Response, error) {
+  // curl -u USER:PASSWORD \
+  //  http://MGMTSERVER/v1/o/ORGNAME/apis/APINAME/revisions/REVNUMBER?format=bundle > bundle.zip
+
+  path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev))
+  // append the required query param
+  origURL, err := url.Parse(path)
+  if err != nil {
+     return "", nil, err
+  }
+  q := origURL.Query()
+  q.Add("format", "bundle")
+  origURL.RawQuery = q.Encode()
+  path = origURL.String()
+
+  req, e := s.client.NewRequest("GET", path, nil)
+  if e != nil {
+    return "", nil, e
+  }
+  req.Header.Del("Accept")
+
+  t := time.Now()
+  filename := fmt.Sprintf("proxyName-r%d-%d%02d%02d-%02d%02d%02d.zip",
+    rev, t.Year(), t.Month(), t.Day(),
+    t.Hour(), t.Minute(), t.Second())
+
+  out, e := os.Create(filename)
+  if e != nil {
+    return "", nil, e
+  }
+  
+  resp, e := s.client.Do(req, out)
+  if e != nil {
+    return "", resp, e
+  }
+  out.Close()
+  return filename, resp, e
 }
 
 
