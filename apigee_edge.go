@@ -1,3 +1,4 @@
+// Package apigee provides a client for administering Apigee Edge. 
 package apigee
 
 import (
@@ -34,7 +35,7 @@ type EdgeClient struct {
   // HTTP client used to communicate with the Edge API.
   client *http.Client
   
-  auth EdgeAuth
+  auth *EdgeAuth
   debug bool
   
   // Base URL for API requests.
@@ -118,16 +119,52 @@ func addOptions(s string, opt interface{}) (string, error) {
 
 type EdgeClientOptions struct {
   httpClient *http.Client;
-  Org string;
+
+  // Optional. The Admin base URL. For example, if using OPDK this might be
+  // http://192.168.10.56:8080 . It defaults to https://api.enterprise.apigee.com
   MgmtUrl string
-  Auth EdgeAuth
+
+  // Specify the Edge organization name.
+  Org string;
+
+  // Required. Authentication information for the Edge Management server.
+  Auth *EdgeAuth
+
+  // Optional. Warning: if set to true, HTTP Basic Auth base64 blobs will appear in output.
   Debug bool
 }
 
+// EdgeAuth holds information about how to authenticate to the Edge Management server.
 type EdgeAuth struct {
-  Username string
+  // Optional. The path to the .netrc file that holds credentials for the Edge Management server. 
+  // By default, this is ${HOME}/.netrc .  If you specify a Password, this option is ignored.
   NetrcPath string
+
+  // Optional. The username to use when authenticating to the Edge Management server.
+  // Ignored if you specify a NetrcPath.
+  Username string
+
+  // Optional. Used if you explicitly specify a Password.
   Password string
+}
+
+
+func retrieveAuthFromNetrc(netrcPath, host string) (*EdgeAuth, error) {
+  if netrcPath == "" {
+    netrcPath = os.ExpandEnv("${HOME}/.netrc")
+  }
+  n, e := netrc.ParseFile(netrcPath)
+  if e != nil {
+    fmt.Printf("while parsing .netrc, error:\n%#v\n", e)
+    return nil, e
+  }
+  machine := n.FindMachine(host) // eg, "api.enterprise.apigee.com"
+  if machine == nil || machine.Password == "" {
+    msg := fmt.Sprintf("while scanning %s, cannot find machine:%s", netrcPath, host)
+    return nil, errors.New(msg)
+  }
+  auth := &EdgeAuth{Username: machine.Login, Password: machine.Password}
+  return auth, nil
 }
 
 // NewEdgeClient returns a new EdgeClient.
@@ -149,29 +186,19 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
   c := &EdgeClient{client: httpClient, BaseURL: baseURL, UserAgent: userAgent}
   c.Proxies = &ProxiesServiceOp{client: c}
 
-  if o.Auth.Username == "" {
-    return nil, errors.New("you must pass a Username")
+  var e error = nil
+  if o.Auth == nil {
+    c.auth, e = retrieveAuthFromNetrc("", baseURL.Host)
+  } else if o.Auth.Password == "" {
+    c.auth, e = retrieveAuthFromNetrc(o.Auth.NetrcPath, baseURL.Host)
+  } else {
+    c.auth = &EdgeAuth{Username: o.Auth.Username, Password: o.Auth.Password}
   }
 
-  password := o.Auth.Password
-  if o.Auth.Password == "" {
-    netrcPath := o.Auth.NetrcPath
-    if o.Auth.NetrcPath == "" {
-      netrcPath = os.ExpandEnv("${HOME}/.netrc")
-    }
-    n, e := netrc.ParseFile(netrcPath)
-    if e != nil {
-      fmt.Printf("while parsing .netrc, error:\n%#v\n", e)
-      return nil, e
-    }
-    machine := n.FindMachine(baseURL.Host) // eg, "api.enterprise.apigee.com"
-    if machine == nil || machine.Password == "" {
-      msg := fmt.Sprintf("while scanning %s, cannot find machine:%s", netrcPath, baseURL.Host)
-      return nil, errors.New(msg)
-    }
-    password = machine.Password
+  if e != nil {
+    return nil, e
   }
-  c.auth = EdgeAuth{Username: o.Auth.Username, Password: password}
+  
   if o.Debug {
     c.debug = true
     c.onRequestCompleted = func(req *http.Request, resp *http.Response)  {

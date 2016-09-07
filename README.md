@@ -78,23 +78,22 @@ func main() {
   namePtr := flag.String("name", "", "name for the API Proxy")
   srcPtr := flag.String("src", "", "a directory containing an exploded apiproxy bundle, or a zipped bundle")
   orgPtr := flag.String("org", "", "an Edge Organization")
-  userPtr := flag.String("user", "", "an administrator in that Edge Organization")
   flag.Parse()
 
   if *namePtr != "" {
     proxyName = *namePtr
   } 
   
-  if *srcPtr == "" || *userPtr == "" || *orgPtr == "" {
+  if *srcPtr == "" || *orgPtr == "" {
     usage()
     return
   }
   
-  auth := apigee.EdgeAuth{Username: *userPtr}
+  var auth *apigee.EdgeAuth = nil
   
-  // If no password is specified, the library reads from .netrc.
+  // Specifying nil for Auth implies "read from .netrc"
   // Specify a password explicitly like so:
-  // auth := apigee.EdgeAuth{Username: *userPtr, Password: "Secret*123"}
+  // auth := apigee.EdgeAuth{Username: "user@example.org", Password: "Secret*123"}
   
   opts := &apigee.EdgeClientOptions{Org: *orgPtr, Auth: auth, Debug: false }
   client, e := apigee.NewEdgeClient(opts)
@@ -137,7 +136,8 @@ func main() {
 
 ## Bugs
 
-There are embarrassingly few tests.
+* There are embarrassingly few tests.
 
-There are no reference docs.
+* When importing from a source directory, the library creates a temporary zip file, but doesn't delete the file.
 
+* There is no working client code included in the distribution here. 
