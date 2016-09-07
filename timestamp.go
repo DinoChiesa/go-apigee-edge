@@ -8,11 +8,12 @@ import (
 
 // Timestamp represents a time that can be unmarshalled from a JSON string
 // formatted as "java time" = milliseconds-since-unix-epoch.
-type Timestamp time.Time
+type Timestamp struct {
+  time.Time
+}
 
-func (t *Timestamp) MarshalJSON() ([]byte, error) {
-  ms := int64(time.Nanosecond) * int64(time.Time(*t).UnixNano()) /
-    int64(time.Millisecond)
+func (t Timestamp) MarshalJSON() ([]byte, error) {
+  ms := t.Time.UnixNano() / 1000000
   stamp := fmt.Sprintf("%d", ms)
   return []byte(stamp), nil
 }
@@ -24,17 +25,16 @@ func (t *Timestamp) UnmarshalJSON(b []byte) error {
   if err != nil {
     return err
   }
-
-  *t = Timestamp(time.Unix(0, ms * int64(time.Millisecond) / int64(time.Nanosecond)))
+  t.Time = time.Unix(int64(ms/1000), (ms - int64(ms/1000)*1000) * 1000000)
   return nil
 }
 
 
 func (t Timestamp) String() string {
-  return time.Time(t).String()
+  return fmt.Sprintf("%d", int64(t.Time.UnixNano()) / 1000000)
 }
 
 // Equal reports whether t and u are equal based on time.Equal
 func (t Timestamp) Equal(u Timestamp) bool {
-  return time.Time(t).Equal(time.Time(u))
+  return t.Time.Equal(u.Time)
 }
