@@ -56,7 +56,7 @@ This project is a work-in-progress. Here's the status:
 Pull requests are welcomed.
 
 
-## Usage Examples
+## Usage Example
 
 ```go
 package main
@@ -91,6 +91,11 @@ func main() {
   }
   
   auth := apigee.EdgeAuth{Username: *userPtr}
+  
+  // If no password is specified, the library reads from .netrc.
+  // Specify a password explicitly like so:
+  // auth := apigee.EdgeAuth{Username: *userPtr, Password: "Secret*123"}
+  
   opts := &apigee.EdgeClientOptions{Org: *orgPtr, Auth: auth, Debug: false }
   client, e := apigee.NewEdgeClient(opts)
   if e != nil {
