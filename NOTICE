@@ -1,0 +1,15 @@
+Go client library for Apigee Edge Admin API
+Copyright (c) 2016 Apigee Corp.
+
+================
+Portions of the client library are based on code at:
+https://github.com/digitalocean/godo
+
+Copyright (c) 2014-2016 The godo AUTHORS. All rights reserved.
+
+================
+Portions of the godo client are based on code at:
+https://github.com/google/go-github/
+
+Copyright (c) 2013 The go-github AUTHORS. All rights reserved.
+================
