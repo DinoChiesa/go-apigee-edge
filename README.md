@@ -135,3 +135,9 @@ func main() {
 
 ```
 
+## Bugs
+
+There are embarrassingly few tests.
+
+There are no reference docs.
+
