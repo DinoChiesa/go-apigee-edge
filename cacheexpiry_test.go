@@ -7,49 +7,44 @@ import (
 )
 
 const (
-  attrsJson1 = `[ {
-    "name" : "access",
-    "value" : "private"
-  } ]`
-  attrsJson2 = `[ {
-    "name" : "access",
-    "value" : "private"
-  } , {
-    "name" : "creator",
-    "value" : "Brahma"
-  } ]`
-  attrsJson3 = `[ {
-    "name" : "access",
-    "value" : "private"
-  }, {
-    "name" : "creator",
-    "value" : "Brahma"
-  }, {
-    "name" : "lastModified",
-    "value" : "Wednesday,  7 September 2016, 14:45"
-  } ]`
+  cacheJson1 = `{
+   "expiryDate": { "value": "09-22-2016" },
+   "valuesNull" : false
+ }`
+  
+  cacheJson2 = `{
+   "timeoutInSec" : { "value" : "300" },  
+   "valuesNull" : false
+ }`
+  
+  cacheJson3 = `{
+   "timeOfDay": { "value" : "14:30:00" },
+   "valuesNull" : false
+ }`
 )
+
 
 var (
-  attrsMap1 = Attributes{"access":"private"}
-  attrsMap2 = Attributes{"access":"private", "creator":"Brahma"}
-  attrsMap3 = Attributes{"access":"private", "creator":"Brahma","lastModified":"Wednesday,  7 September 2016, 14:45"}
+  cacheExpiry1 = CacheExpiry{"expiryDate","09-22-2016",false}
+  cacheExpiry2 = CacheExpiry{"timeoutInSec","300",false}
+  cacheExpiry3 = CacheExpiry{"timeOfDay","14:30:00",false}
 )
 
-func TestAttributes_Unmarshal(t *testing.T) {
+
+func TestCacheExpiry_Unmarshal(t *testing.T) {
   testCases := []struct {
     desc      string
     data      string
-    expected  Attributes
+    expected  CacheExpiry
     wantErr   bool
     equal     bool
   }{
-    {"one member   ", attrsJson1, attrsMap1, false, true},
-    {"two members  ", attrsJson2, attrsMap2, false, true},
-    {"three members", attrsJson3, attrsMap3, false, true},
+    {"cacheJson1", cacheJson1, cacheExpiry1, false, true},
+    {"cacheJson2", cacheJson2, cacheExpiry2, false, true},
+    {"cacheJson3", cacheJson3, cacheExpiry3, false, true},
   }
   for _, tc := range testCases {
-    var got Attributes
+    var got CacheExpiry
     err := json.Unmarshal([]byte(tc.data), &got)
     t.Logf("%s: got=%v", tc.desc, got)
     if gotErr := err != nil; gotErr != tc.wantErr {
@@ -65,17 +60,17 @@ func TestAttributes_Unmarshal(t *testing.T) {
 }
 
 
-func TestAttributes_Marshal(t *testing.T) {
+func TestCacheExpiry_Marshal(t *testing.T) {
   testCases := []struct {
     desc      string
-    data      Attributes
+    data      CacheExpiry
     expected  string
     wantErr   bool
     equal     bool
   }{
-    {"case 1 ", attrsMap1, attrsJson1, false, true},
-    {"case 2 ", attrsMap2, attrsJson2, false, true},
-    {"case 3 ", attrsMap3, attrsJson3, false, true},
+    {"cacheJson1", cacheExpiry1, cacheJson1, false, true},
+    {"cacheJson2", cacheExpiry2, cacheJson2, false, true},
+    {"cacheJson3", cacheExpiry3, cacheJson3, false, true},
   }
   
   for _, tc := range testCases {

@@ -50,7 +50,7 @@ This project is a work-in-progress. Here's the status:
 | developer app | | list, query, create, delete, revoke, approve, add new credential, remove credential | modify custom attrs
 | credential    | | list, revoke, approve, add apiproduct, remove apiproduct |
 | kvm           | | list, query, create, delete, get all entries, get entry, add entry, modify entry, remove entry
-| cache         | | list, query, create, delete, clear | 
+| cache         | list, query | create, delete, clear | 
 | environment   | list, query | |
 
 Pull requests are welcomed.

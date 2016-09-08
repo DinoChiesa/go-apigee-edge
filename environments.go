@@ -6,8 +6,8 @@ import (
 
 const environmentsPath = "environments"
 
-// ProductsService is an interface for interfacing with the Apigee Edge Admin API
-// dealing with apiproducts.
+// EnvironmentsService is an interface for interfacing with the Apigee Edge Admin API
+// querying Edge environments.
 type EnvironmentsService interface {
   List() ([]string, *Response, error)
   Get(string) (*Environment, *Response, error)

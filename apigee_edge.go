@@ -48,6 +48,7 @@ type EdgeClient struct {
   Proxies          ProxiesService
   Products         ProductsService
   Environments     EnvironmentsService
+  Caches           CachesService
   
   // Account           AccountService
   // Actions           ActionsService
@@ -189,6 +190,7 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
   c.Proxies = &ProxiesServiceOp{client: c}
   c.Products = &ProductsServiceOp{client: c}
   c.Environments = &EnvironmentsServiceOp{client: c}
+  c.Caches = &CachesServiceOp{client: c}
   
   var e error = nil
   if o.Auth == nil {
