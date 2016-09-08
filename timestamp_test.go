@@ -77,7 +77,7 @@ func TestTimestamp_Unmarshal(t *testing.T) {
 }
 
 
-func TestTimstamp_MarshalReflexivity(t *testing.T) {
+func TestTimestamp_MarshalReflexivity(t *testing.T) {
   testCases := []struct {
     desc string
     data Timestamp

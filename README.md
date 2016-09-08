@@ -45,7 +45,7 @@ This project is a work-in-progress. Here's the status:
 | entity type   | implemented              | not implemented yet
 | :------------ | :----------------------- | :--------------------
 | apis          | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy, inquire deployment status | 
-| apiproducts   | | list, query, create, delete, modify description, modify approvalType, modify scopes, add or remove proxy, add or remove custom attrs, modify public/private, change quota | 
+| apiproducts   | list, query | create, delete, modify description, modify approvalType, modify scopes, add or remove proxy, add or remove custom attrs, modify public/private, change quota | 
 | developers    | | list, query, make active or inactive, create, delete, modify custom attrs | 
 | developer app | | list, query, create, delete, revoke, approve, add new credential, remove credential | modify custom attrs
 | credential    | | list, revoke, approve, add apiproduct, remove apiproduct |
@@ -56,7 +56,9 @@ This project is a work-in-progress. Here's the status:
 Pull requests are welcomed.
 
 
-## Usage Example
+## Usage Examples
+
+### Importing a Proxy
 
 ```go
 package main
@@ -108,39 +110,85 @@ func main() {
     fmt.Printf("while importing, error:\n%#v\n", e)
     return
   }
-  fmt.Printf("status: %d\n", resp.StatusCode)
   fmt.Printf("status: %s\n", resp.Status)
   defer resp.Body.Close()  
   fmt.Printf("proxyRev: %#v\n", proxyRev)
-
-  // TODO: Deploy the proxy revision with override = 10
-
-  // TODO: Undeploy the proxy revision
-
-  fmt.Printf("\nWaiting...\n")
-  time.Sleep(3 * time.Second)
-  
-  fmt.Printf("\nDeleting...\n")
-  deletedRev, resp, e := client.Proxies.DeleteRevision(proxyRev.Name, proxyRev.Revision)
-  if e != nil {
-    fmt.Printf("while deleting, error:\n%#v\n", e)
-    return
-  }
-  fmt.Printf("status: %d\n", resp.StatusCode)
-  fmt.Printf("status: %s\n", resp.Status)
-  defer resp.Body.Close()  
-  fmt.Printf("proxyRev: %#v\n", deletedRev)
 }
 
 ```
 
+### Deleting an API Proxy
+
+```go
+func main() {
+  opts := &apigee.EdgeClientOptions{Org: *orgPtr, Auth: nil, Debug: false }
+  client, e := apigee.NewEdgeClient(opts)
+  if e != nil {
+    fmt.Printf("while initializing Edge client, error:\n%#v\n", e)
+    return
+  }
+  fmt.Printf("Deleting...\n")
+  deletedRev, resp, e := client.Proxies.DeleteRevision(proxyName, Revision{2})
+  if e != nil {
+    fmt.Printf("while deleting, error:\n%#v\n", e)
+    return
+  }
+  fmt.Printf("status: %s\n", resp.Status)
+  defer resp.Body.Close()  
+  fmt.Printf("proxyRev: %#v\n", deletedRev)
+}
+```
+
+### Listing API Products
+
+```go
+func main() {
+  orgPtr := flag.String("org", "", "an Edge Organization")
+  flag.Parse()
+  if *orgPtr == "" {
+    usage()
+    return
+  }
+  
+  opts := &apigee.EdgeClientOptions{Org: *orgPtr, Auth: nil, Debug: false }
+  client, e := apigee.NewEdgeClient(opts)
+  if e != nil {
+    fmt.Printf("while initializing Edge client, error:\n%#v\n", e)
+    return
+  }
+
+  fmt.Printf("\nListing...\n")
+  list, resp, e := client.Products.List()
+  if e != nil {
+    fmt.Printf("while listing, error:\n%#v\n", e)
+    return
+  }
+  showStatus(resp)
+  fmt.Printf("products: %#v\n", list)
+  resp.Body.Close()  
+
+  for _, element := range list {
+    product, resp, e := client.Products.Get(element)
+    if e != nil {
+      fmt.Printf("while getting, error:\n%#v\n", e)
+      return
+    }
+    showStatus(resp)
+    fmt.Printf("product: %#v\n", product)
+    resp.Body.Close()  
+  }
+  
+  fmt.Printf("\nall done.\n")
+}
+```
+
 ## Bugs
 
-* There are embarrassingly few tests.
+* There tests are incomplete.
 
 * When importing from a source directory, the library creates a temporary zip file, but doesn't delete the file.
 
-* There is no working code for example clients, included in the distribution here. 
+* There is no working code for example programs using the library, included in the distribution here. 
 
 * There is no package versioning strategy (eg, no use of GoPkg.in)
 

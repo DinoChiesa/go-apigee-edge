@@ -46,6 +46,7 @@ type EdgeClient struct {
 
   // Services used for communicating with the API
   Proxies          ProxiesService
+  Products         ProductsService
   
   // Account           AccountService
   // Actions           ActionsService
@@ -185,6 +186,7 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
   
   c := &EdgeClient{client: httpClient, BaseURL: baseURL, UserAgent: userAgent}
   c.Proxies = &ProxiesServiceOp{client: c}
+  c.Products = &ProductsServiceOp{client: c}
 
   var e error = nil
   if o.Auth == nil {
