@@ -19,7 +19,7 @@ type ProductsServiceOp struct {
 
 var _ ProductsService = &ProductsServiceOp{}
 
-// Proxy contains information about an API Proxy within an Edge organization.
+// ApiProduct contains information about an API Product within an Edge organization.
 type ApiProduct struct {
   Name            string      `json:"name,omitempty"`
   ApiResources    []string    `json:"apiResources,omitempty"`

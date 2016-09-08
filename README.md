@@ -51,7 +51,7 @@ This project is a work-in-progress. Here's the status:
 | credential    | | list, revoke, approve, add apiproduct, remove apiproduct |
 | kvm           | | list, query, create, delete, get all entries, get entry, add entry, modify entry, remove entry
 | cache         | | list, query, create, delete, clear | 
-| environment   | | list, query |
+| environment   | list, query | |
 
 Pull requests are welcomed.
 
