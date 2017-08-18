@@ -266,7 +266,7 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
 // which will be resolved to the BaseURL of the Client. Relative URLS should
 // always be specified without a preceding slash. If specified, the value
 // pointed to by body is JSON encoded and included in as the request body.
-func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}) (*http.Request, error) {
+func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}, contentTypeOverride string) (*http.Request, error) {
   rel, err := url.Parse(urlStr)
   ctype := ""
   if err != nil {
@@ -307,11 +307,17 @@ func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}) (*http.
     return nil, err
   }
 
-  if ctype != "" {
-    req.Header.Add("Content-Type", ctype)
+
+  if contentTypeOverride != "" {
+    req.Header.Add("Content-Type", contentTypeOverride)
+  } else {
+    if ctype != "" {
+      req.Header.Add("Content-Type", ctype)
+    }
+    req.Header.Add("Accept", appJson)
+    req.Header.Add("User-Agent", c.UserAgent)
   }
-  req.Header.Add("Accept", appJson)
-  req.Header.Add("User-Agent", c.UserAgent)
+
   req.SetBasicAuth(c.auth.Username, c.auth.Password)
   return req, nil
 }
