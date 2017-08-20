@@ -46,6 +46,7 @@ type EdgeClient struct {
 
   // Services used for communicating with the API
   Proxies          ProxiesService
+  TargetServers    TargetServersService
   
   // Account           AccountService
   // Actions           ActionsService
@@ -185,6 +186,7 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
   
   c := &EdgeClient{client: httpClient, BaseURL: baseURL, UserAgent: userAgent}
   c.Proxies = &ProxiesServiceOp{client: c}
+  c.TargetServers = &TargetServersServiceOp{client: c}
 
   var e error = nil
   if o.Auth == nil {
@@ -287,7 +289,7 @@ func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}, content
   var req *http.Request 
   if body != nil {
     switch body.(type) { 
-      default: 
+      default:
         ctype = appJson
         buf := new(bytes.Buffer)
         err := json.NewEncoder(buf).Encode(body)
