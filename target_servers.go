@@ -4,8 +4,8 @@ import (
 	"path"
 )
 
-// ProxiesService is an interface for interfacing with the Apigee Edge Admin API
-// dealing with apiproxies.
+// TargetServersService is an interface for interfacing with the Apigee Edge Admin API
+// dealing with target servers.
 type TargetServersService interface {
 	Get(string, string) (*TargetServer, *Response, error)
 	Create(TargetServer, string) (*TargetServer, *Response, error)
@@ -58,13 +58,13 @@ func (s *TargetServersServiceOp) Get(name string, env string) (*TargetServer, *R
 
 func (s *TargetServersServiceOp) Create(targetServer TargetServer, env string) (*TargetServer, *Response, error) {
 
-	return postOrPut(targetServer, env, "POST", s)
+	return postOrPutTargetServer(targetServer, env, "POST", s)
 
 }
 
 func (s *TargetServersServiceOp) Update(targetServer TargetServer, env string) (*TargetServer, *Response, error) {
 
-	return postOrPut(targetServer, env, "PUT", s)
+	return postOrPutTargetServer(targetServer, env, "PUT", s)
 
 }
 
@@ -87,7 +87,7 @@ func (s *TargetServersServiceOp) Delete(name string, env string) (*Response, err
 }
 
 
-func postOrPut(targetServer TargetServer, env string, opType string, s *TargetServersServiceOp) (*TargetServer, *Response, error) {
+func postOrPutTargetServer(targetServer TargetServer, env string, opType string, s *TargetServersServiceOp) (*TargetServer, *Response, error) {
 
 	uripath := ""
 
