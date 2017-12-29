@@ -49,6 +49,9 @@ type EdgeClient struct {
   TargetServers    TargetServersService
   Products		   ProductsService
   Developers       DeveloperService
+  Companies        CompanyService
+  CompanyApps      CompanyAppService
+  DeveloperApps    DeveloperAppService
   
   // Account           AccountService
   // Actions           ActionsService
@@ -191,6 +194,9 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
   c.TargetServers = &TargetServersServiceOp{client: c}
   c.Products = &ProductsServiceOp{client: c}
   c.Developers = &DeveloperServiceOp{client: c}
+  c.Companies = &CompanyServiceOp{client: c}
+  c.CompanyApps = &CompanyAppServiceOp{client: c}
+  c.DeveloperApps = &DeveloperAppServiceOp{client: c}
 
   var e error = nil
   if o.Auth == nil {
