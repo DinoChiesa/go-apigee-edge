@@ -35,11 +35,6 @@ type Product struct {
 
 }
 
-type Attribute struct {
-	Name						string		`json:"name,omitempty"`
-	Value						string		`json:"value,omitempty"`
-}
-
 func (s *ProductsServiceOp) Get(name string) (*Product, *Response, error) {
 
 	path := path.Join("apiproducts", name)
