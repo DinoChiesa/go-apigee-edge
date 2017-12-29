@@ -20,7 +20,7 @@ The Apigee Edge administrative API is just a REST-ful API, so of course any go p
 
 Not in scope:
 
-- OAuth2.0 tokens - Listing, Querying, Approving, Revoking, Deleting, or Updating 
+- OAuth2.0 tokens - Listing, Querying, Approving, Revoking, Deleting, or Updating
 - TargetServers: list, create, edit, etc
 - keystores, truststores: adding certs, listing certs
 - data masks
@@ -33,9 +33,14 @@ Not in scope:
 
 These items may be added later as need and demand warrants.
 
+## This is not an official Google product
+
+This library and any example tools included here are not an official Google product, nor are they part of an official Google product.
+Support is available on a best-effort basis via github or community.apigee.com .
+
 ## Copyright and License
 
-This code is [Copyright (c) 2016 Apigee Corp](NOTICE). it is licensed under the [Apache 2.0 Source Licese](LICENSE).
+This code is [Copyright (c) 2016 Apigee Corp, 2017 Google Inc.](NOTICE). it is licensed under the [Apache 2.0 Source Licese](LICENSE).
 
 
 ## Status
@@ -44,9 +49,9 @@ This project is a work-in-progress. Here's the status:
 
 | entity type   | implemented              | not implemented yet
 | :------------ | :----------------------- | :--------------------
-| apis          | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy, inquire deployment status | 
-| apiproducts   | list, query | create, delete, modify description, modify approvalType, modify scopes, add or remove proxy, add or remove custom attrs, modify public/private, change quota | 
-| developers    | | list, query, make active or inactive, create, delete, modify custom attrs | 
+| apis          | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy, inquire deployment status |
+| apiproducts   | list, query, create, delete modify description, modify approvalType, modify scopes, add or remove proxy, add or remove custom attrs, modify public/private, change quota | |
+| developers    | list, query, create, delete, modify custom attrs | make active or inactive |
 | developer app | | list, query, create, delete, revoke, approve, add new credential, remove credential | modify custom attrs
 | credential    | | list, revoke, approve, add apiproduct, remove apiproduct |
 | kvm           | | list, query, create, delete, get all entries, get entry, add entry, modify entry, remove entry

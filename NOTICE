@@ -1,5 +1,5 @@
 Go client library for Apigee Edge Admin API
-Copyright (c) 2016 Apigee Corp.
+Copyright (c) 2016 Apigee Corp, 2017 Google Inc.
 
 ================
 Portions of the client library are based on code at:
