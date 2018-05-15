@@ -1,4 +1,4 @@
-// Package apigee provides a client for administering Apigee Edge. 
+// Package apigee provides a client for administering Apigee Edge.
 package apigee
 
 import (
@@ -12,7 +12,7 @@ import (
   "io"
   "io/ioutil"
   "net/http"
-  "net/http/httputil"  
+  "net/http/httputil"
   "net/url"
   "reflect"
   //"strconv"
@@ -20,6 +20,7 @@ import (
 
   "github.com/google/go-querystring/query"
   "github.com/bgentry/go-netrc/netrc"
+  "github.com/sethgrid/pester"
 )
 
 const (
@@ -33,11 +34,11 @@ const (
 // EdgeClient manages communication with Apigee Edge V1 Admin API.
 type EdgeClient struct {
   // HTTP client used to communicate with the Edge API.
-  client *http.Client
-  
+  client pester.Client
+
   auth *EdgeAuth
   debug bool
-  
+
   // Base URL for API requests.
   BaseURL *url.URL
 
@@ -46,7 +47,13 @@ type EdgeClient struct {
 
   // Services used for communicating with the API
   Proxies          ProxiesService
-  
+  TargetServers    TargetServersService
+  Products		   ProductsService
+  Developers       DeveloperService
+  Companies        CompanyService
+  CompanyApps      CompanyAppService
+  DeveloperApps    DeveloperAppService
+
   // Account           AccountService
   // Actions           ActionsService
   // Domains           DomainsService
@@ -118,7 +125,7 @@ func addOptions(s string, opt interface{}) (string, error) {
 
 
 type EdgeClientOptions struct {
-  httpClient *http.Client;
+  pesterClient *pester.Client;
 
   // Optional. The Admin base URL. For example, if using OPDK this might be
   // http://192.168.10.56:8080 . It defaults to https://api.enterprise.apigee.com
@@ -136,7 +143,7 @@ type EdgeClientOptions struct {
 
 // EdgeAuth holds information about how to authenticate to the Edge Management server.
 type EdgeAuth struct {
-  // Optional. The path to the .netrc file that holds credentials for the Edge Management server. 
+  // Optional. The path to the .netrc file that holds credentials for the Edge Management server.
   // By default, this is ${HOME}/.netrc .  If you specify a Password, this option is ignored.
   NetrcPath string
 
@@ -168,11 +175,13 @@ func retrieveAuthFromNetrc(netrcPath, host string) (*EdgeAuth, error) {
 }
 
 // NewEdgeClient returns a new EdgeClient.
-func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
-  httpClient := o.httpClient
-  if o.httpClient == nil {
-    httpClient = http.DefaultClient
+func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient ,error) {
+  pesterClient := o.pesterClient
+  if o.pesterClient == nil {
+    pesterClient = pester.New()
   }
+  pesterClient.MaxRetries = 5
+  pesterClient.Backoff = pester.LinearBackoff //n seconds where n is the retry number
   mgmtUrl := o.MgmtUrl
   if o.MgmtUrl == "" {
     mgmtUrl = defaultBaseURL
@@ -182,9 +191,15 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
     return nil, err
   }
   baseURL.Path = path.Join(baseURL.Path, "v1/o/", o.Org, "/")
-  
-  c := &EdgeClient{client: httpClient, BaseURL: baseURL, UserAgent: userAgent}
+
+  c := &EdgeClient{client: *pesterClient, BaseURL: baseURL, UserAgent: userAgent}
   c.Proxies = &ProxiesServiceOp{client: c}
+  c.TargetServers = &TargetServersServiceOp{client: c}
+  c.Products = &ProductsServiceOp{client: c}
+  c.Developers = &DeveloperServiceOp{client: c}
+  c.Companies = &CompanyServiceOp{client: c}
+  c.CompanyApps = &CompanyAppServiceOp{client: c}
+  c.DeveloperApps = &DeveloperAppServiceOp{client: c}
 
   var e error = nil
   if o.Auth == nil {
@@ -198,14 +213,14 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
   if e != nil {
     return nil, e
   }
-  
+
   if o.Debug {
     c.debug = true
     c.onRequestCompleted = func(req *http.Request, resp *http.Response)  {
       debugDump(httputil.DumpResponse(resp, true))
     }
   }
-  
+
   // c.Account = &AccountServiceOp{client: c}
   // c.Actions = &ActionsServiceOp{client: c}
   // c.Domains = &DomainsServiceOp{client: c}
@@ -228,8 +243,8 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
 
 // // ClientOpt are options for New.
 // type ClientOpt func(*EdgeClient) error
-// 
-// // New returns a new instance of the client for the Apigee Edge Admin API 
+//
+// // New returns a new instance of the client for the Apigee Edge Admin API
 // func New(httpClient *http.Client, opts ...ClientOpt) (*EdgeClient, error) {
 //   c := NewClient(httpClient)
 //   for _, opt := range opts {
@@ -237,10 +252,10 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
 //       return nil, err
 //     }
 //   }
-// 
+//
 //   return c, nil
 // }
-// 
+//
 // // SetBaseURL is a client option for setting the base URL.
 // func SetBaseURL(baseurl string) ClientOpt {
 //   return func(c *Client) error {
@@ -248,12 +263,12 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
 //     if err != nil {
 //       return err
 //     }
-// 
+//
 //     c.BaseURL = u
 //     return nil
 //   }
 // }
-// 
+//
 // // SetUserAgent is a client option for adding a string to the user agent.
 // func SetUserAgent(ua string) ClientOpt {
 //   return func(c *Client) error {
@@ -266,7 +281,7 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
 // which will be resolved to the BaseURL of the Client. Relative URLS should
 // always be specified without a preceding slash. If specified, the value
 // pointed to by body is JSON encoded and included in as the request body.
-func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}) (*http.Request, error) {
+func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}, contentTypeOverride string) (*http.Request, error) {
   rel, err := url.Parse(urlStr)
   ctype := ""
   if err != nil {
@@ -278,26 +293,26 @@ func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}) (*http.
   // if err != nil {
   //    return nil,err
   // }
-  // 
+  //
   // c.BaseURL = u
   u.Path = path.Join(c.BaseURL.Path, rel.Path)
-  
+
   fmt.Printf("u: %#v\n", u)
 
-  var req *http.Request 
+  var req *http.Request
   if body != nil {
-    switch body.(type) { 
-      default: 
-        ctype = appJson
-        buf := new(bytes.Buffer)
-        err := json.NewEncoder(buf).Encode(body)
-        if err != nil {
-          return nil, err
-        }
-        req, err = http.NewRequest(method, u.String(), buf)
-      case io.Reader:
-        ctype = octetStream
-        req, err = http.NewRequest(method, u.String(), body.(io.Reader))
+    switch body.(type) {
+    default:
+      ctype = appJson
+      buf := new(bytes.Buffer)
+      err := json.NewEncoder(buf).Encode(body)
+      if err != nil {
+        return nil, err
+      }
+      req, err = http.NewRequest(method, u.String(), buf)
+    case io.Reader:
+      ctype = octetStream
+      req, err = http.NewRequest(method, u.String(), body.(io.Reader))
     }
   } else {
     req, err = http.NewRequest(method, u.String(), nil)
@@ -307,11 +322,17 @@ func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}) (*http.
     return nil, err
   }
 
-  if ctype != "" {
-    req.Header.Add("Content-Type", ctype)
+
+  if contentTypeOverride != "" {
+    req.Header.Add("Content-Type", contentTypeOverride)
+  } else {
+    if ctype != "" {
+      req.Header.Add("Content-Type", ctype)
+    }
+    req.Header.Add("Accept", appJson)
+    req.Header.Add("User-Agent", c.UserAgent)
   }
-  req.Header.Add("Accept", appJson)
-  req.Header.Add("User-Agent", c.UserAgent)
+
   req.SetBasicAuth(c.auth.Username, c.auth.Password)
   return req, nil
 }
@@ -331,11 +352,11 @@ func newResponse(r *http.Response) *Response {
 
 
 func debugDump(data []byte, err error) {
-    if err == nil {
-        fmt.Printf("%s\n\n", data)
-    } else {
-        log.Fatalf("%s\n\n", err)
-    }
+  if err == nil {
+    fmt.Printf("%s\n\n", data)
+  } else {
+    log.Fatalf("%s\n\n", err)
+  }
 }
 
 // Do sends an API request and returns the API response. The API response is
@@ -346,7 +367,7 @@ func (c *EdgeClient) Do(req *http.Request, v interface{}) (*Response, error) {
   if c.debug {
     debugDump(httputil.DumpRequestOut(req, true))
   }
-  
+
   resp, err := c.client.Do(req)
   if err != nil {
     return nil, err

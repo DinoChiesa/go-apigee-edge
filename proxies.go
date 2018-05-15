@@ -9,9 +9,12 @@ import (
   "os"
   "fmt"
   "net/url"
+  "net/http"
   "io"
   "io/ioutil"
   "errors"
+  "log"
+  "strconv"
 )
 
 const proxiesPath = "apis"
@@ -24,7 +27,8 @@ type ProxiesService interface {
   Import(string, string) (*ProxyRevision, *Response, error)
   Delete(string) (*DeletedProxyInfo, *Response, error)
   DeleteRevision(string, Revision) (*ProxyRevision, *Response, error)
-  Deploy(string,string,Revision) (*ProxyRevisionDeployment, *Response, error)
+  Deploy(string,string,Revision,int,bool) (*ProxyRevisionDeployment, *Response, error)
+  ReDeploy(string,string,Revision,int,bool) (*ProxyRevisionDeployments, *Response, error)
   Undeploy(string,string,Revision) (*ProxyRevisionDeployment, *Response, error)
   Export(string, Revision) (string, *Response, error)
   GetDeployments(string) (*ProxyDeployment, *Response, error)
@@ -81,6 +85,14 @@ type ProxyRevisionDeployment struct {
   State           string        `json:"state,omitempty"`
   Servers         []EdgeServer  `json:"server,omitempty"`
 }
+
+// ProxyRevisionDeployment holds information about the deployment state of a
+// single revision of an API Proxy.
+type ProxyRevisionDeployments struct {
+  Name            string                        `json:"aPIProxy,omitempty"`
+  Environments    []ProxyRevisionDeployment     `json:"environment,omitempty"`
+  Organization    string                        `json:"organization,omitempty"`
+}
  
 // When inquiring the deployment status of an API PRoxy revision, even implicitly
 // as when performing a Deploy or Undeploy, the response includes the deployment
@@ -128,7 +140,7 @@ type DeletedProxyInfo struct {
 
 // List retrieves the list of apiproxy names for the organization referred by the EdgeClient.
 func (s *ProxiesServiceOp) List() ([]string, *Response, error) {
-  req, e := s.client.NewRequest("GET", proxiesPath, nil)
+  req, e := s.client.NewRequest("GET", proxiesPath, nil, "")
   if e != nil {
     return nil, nil, e
   }
@@ -144,7 +156,7 @@ func (s *ProxiesServiceOp) List() ([]string, *Response, error) {
 // the list of available revisions, and the created and last modified dates and actors.
 func (s *ProxiesServiceOp) Get(proxy string) (*Proxy, *Response, error) {
   path := path.Join(proxiesPath, proxy)
-  req, e := s.client.NewRequest("GET", path, nil)
+  req, e := s.client.NewRequest("GET", path, nil, "")
   if e != nil {
     return nil, nil, e
   }
@@ -245,21 +257,28 @@ func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevisi
     return nil, nil, err
   }
   zipfileName := source
+
+  log.Printf("[INFO] *** Import *** isDir: %#v\n", info.IsDir())
+
   if info.IsDir() {
     // create a temporary zip file
     if proxyName == "" {
       proxyName = filepath.Base(source) 
     }
-    tempDir, e := ioutil.TempDir("", "go-apigee-edge-") 
+    log.Printf("[INFO] *** Import *** proxyName: %#v\n", proxyName)
+    tempDir, e := ioutil.TempDir("", "go-apigee-edge-")
     if e != nil {
+      log.Printf("[ERROR] *** Import *** error: %#v\n", e)
       return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
     }
+    log.Printf("[INFO] *** Import *** tempDir: %#v\n", tempDir)
+    log.Printf("[INFO] *** Import *** sourceDir: %#v\n", source)
     zipfileName = path.Join(tempDir, "apiproxy.zip")
     e = zipDirectory (path.Join(source, "apiproxy"), zipfileName, smartFilter)
     if e != nil {
       return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
     }
-    fmt.Printf("zipped %s into %s\n\n", source, zipfileName)
+    log.Printf("[INFO] *** zipped %s into %s\n\n", source, zipfileName)
   }
 
   if !strings.HasSuffix(zipfileName,".zip") {
@@ -288,7 +307,7 @@ func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevisi
   }
   defer ioreader.Close()
   
-  req, e := s.client.NewRequest("POST", path, ioreader)
+  req, e := s.client.NewRequest("POST", path, ioreader, "")
   if e != nil {
     return nil, nil, e
   }
@@ -316,7 +335,7 @@ func (s *ProxiesServiceOp) Export(proxyName string, rev Revision) (string, *Resp
   origURL.RawQuery = q.Encode()
   path = origURL.String()
 
-  req, e := s.client.NewRequest("GET", path, nil)
+  req, e := s.client.NewRequest("GET", path, nil, "")
   if e != nil {
     return "", nil, e
   }
@@ -344,7 +363,7 @@ func (s *ProxiesServiceOp) Export(proxyName string, rev Revision) (string, *Resp
 // The revision must exist, and must not be currently deployed.
 func (s *ProxiesServiceOp) DeleteRevision(proxyName string, rev Revision) (*ProxyRevision, *Response, error) {
   path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev))
-  req, e := s.client.NewRequest("DELETE", path, nil)
+  req, e := s.client.NewRequest("DELETE", path, nil, "")
   if e != nil {
     return nil, nil, e
   }
@@ -370,7 +389,7 @@ func (s *ProxiesServiceOp) Undeploy(proxyName, env string, rev Revision) (*Proxy
   origURL.RawQuery = q.Encode()
   path = origURL.String()
   
-  req, e := s.client.NewRequest("POST", path, nil)
+  req, e := s.client.NewRequest("POST", path, nil,  "")
   if e != nil {
     return nil, nil, e
   }
@@ -384,32 +403,49 @@ func (s *ProxiesServiceOp) Undeploy(proxyName, env string, rev Revision) (*Proxy
 }
 
 // Deploy a revision of an API proxy to a specific environment within an organization.
-func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision) (*ProxyRevisionDeployment, *Response, error) {
-  path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev), "deployments")
+func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision, delay int, override bool) (*ProxyRevisionDeployment, *Response, error) {
+
+  req, e := prepareDeployRequest(proxyName, env, rev, delay, override, s)
+
+  deployment := ProxyRevisionDeployment{}
+  resp, e := s.client.Do(req, &deployment)
+
+  return &deployment, resp, e
+
+}
+
+//isn't is nice that the return data structure changes on the second revision deployment?! NO!
+func (s *ProxiesServiceOp) ReDeploy(proxyName, env string, rev Revision, delay int, override bool) (*ProxyRevisionDeployments, *Response, error) {
+
+  req, e := prepareDeployRequest(proxyName, env, rev, delay, override, s)
+
+  deployment := ProxyRevisionDeployments{}
+  resp, e := s.client.Do(req, &deployment)
+
+  return &deployment, resp, e
+
+}
+
+func prepareDeployRequest(proxyName, env string, rev Revision, delay int, override bool, s *ProxiesServiceOp) (*http.Request, error) {
+
+  path := path.Join("environments", env, proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev), "deployments")
   // append the query params
   origURL, err := url.Parse(path)
   if err != nil {
-     return nil, nil, err
+    return nil, err
   }
   q := origURL.Query()
-  q.Add("action", "deploy")
-  q.Add("override", "true")
-  q.Add("delay", "12")
-  q.Add("env", env)
+  q.Add("override", strconv.FormatBool(override))
+  q.Add("delay", fmt.Sprintf("%d",delay))
   origURL.RawQuery = q.Encode()
   path = origURL.String()
 
-  req, e := s.client.NewRequest("POST", path, nil)
+  req, e := s.client.NewRequest("POST", path, nil, "application/x-www-form-urlencoded")
   if e != nil {
-    return nil, nil, e
+    return nil, e
   }
-  
-  deployment := ProxyRevisionDeployment{}
-  resp, e := s.client.Do(req, &deployment)
-  if e != nil {
-    return nil, resp, e
-  }
-  return &deployment, resp, e
+  return req, e
+
 }
 
 // Delete an API Proxy and all its revisions from an organization. This method
@@ -417,7 +453,7 @@ func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision) (*ProxyRe
 // in any environment.
 func (s *ProxiesServiceOp) Delete(proxyName string) (*DeletedProxyInfo, *Response, error) {
   path := path.Join(proxiesPath, proxyName)
-  req, e := s.client.NewRequest("DELETE", path, nil)
+  req, e := s.client.NewRequest("DELETE", path, nil, "")
   if e != nil {
     return nil, nil, e
   }
@@ -433,7 +469,7 @@ func (s *ProxiesServiceOp) Delete(proxyName string) (*DeletedProxyInfo, *Respons
 // an organization, including the environment names and revision numbers.
 func (s *ProxiesServiceOp) GetDeployments(proxy string) (*ProxyDeployment, *Response, error) {
   path := path.Join(proxiesPath, proxy, "deployments")
-  req, e := s.client.NewRequest("GET", path, nil)
+  req, e := s.client.NewRequest("GET", path, nil, "")
   if e != nil {
     return nil, nil, e
   }
