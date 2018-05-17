@@ -51,11 +51,11 @@ This project is a work-in-progress. Here's the status:
 | :------------ | :----------------------- | :--------------------
 | apis          | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy, inquire deployment status |
 | apiproducts   | list, query, create, delete modify description, modify approvalType, modify scopes, add or remove proxy, add or remove custom attrs, modify public/private, change quota | |
-| developers    | list, query, create, delete, modify custom attrs | make active or inactive |
-| developer app | | list, query, create, delete, revoke, approve, add new credential, remove credential | modify custom attrs
+| developers    | list, query, create, update, delete, modify custom attrs, make active or inactive, modify custom attrs |
+| developer app | | list, query, create, delete, revoke, approve, add new credential, remove credential, modify custom attrs
 | credential    | | list, revoke, approve, add apiproduct, remove apiproduct |
 | kvm           | | list, query, create, delete, get all entries, get entry, add entry, modify entry, remove entry
-| cache         | list, query | create, delete, clear | 
+| cache         | list, query | create, delete, clear |
 | environment   | list, query | |
 
 Pull requests are welcomed.
@@ -89,19 +89,19 @@ func main() {
 
   if *namePtr != "" {
     proxyName = *namePtr
-  } 
-  
+  }
+
   if *srcPtr == "" || *orgPtr == "" {
     usage()
     return
   }
-  
+
   var auth *apigee.EdgeAuth = nil
-  
+
   // Specifying nil for Auth implies "read from .netrc"
   // Specify a password explicitly like so:
   // auth := apigee.EdgeAuth{Username: "user@example.org", Password: "Secret*123"}
-  
+
   opts := &apigee.EdgeClientOptions{Org: *orgPtr, Auth: auth, Debug: false }
   client, e := apigee.NewEdgeClient(opts)
   if e != nil {
@@ -116,7 +116,7 @@ func main() {
     return
   }
   fmt.Printf("status: %s\n", resp.Status)
-  defer resp.Body.Close()  
+  defer resp.Body.Close()
   fmt.Printf("proxyRev: %#v\n", proxyRev)
 }
 
@@ -139,7 +139,7 @@ func main() {
     return
   }
   fmt.Printf("status: %s\n", resp.Status)
-  defer resp.Body.Close()  
+  defer resp.Body.Close()
   fmt.Printf("proxyRev: %#v\n", deletedRev)
 }
 ```
@@ -154,7 +154,7 @@ func main() {
     usage()
     return
   }
-  
+
   opts := &apigee.EdgeClientOptions{Org: *orgPtr, Auth: nil, Debug: false }
   client, e := apigee.NewEdgeClient(opts)
   if e != nil {
@@ -170,7 +170,7 @@ func main() {
   }
   showStatus(resp)
   fmt.Printf("products: %#v\n", list)
-  resp.Body.Close()  
+  resp.Body.Close()
 
   for _, element := range list {
     product, resp, e := client.Products.Get(element)
@@ -180,9 +180,9 @@ func main() {
     }
     showStatus(resp)
     fmt.Printf("product: %#v\n", product)
-    resp.Body.Close()  
+    resp.Body.Close()
   }
-  
+
   fmt.Printf("\nall done.\n")
 }
 ```
@@ -193,7 +193,7 @@ func main() {
 
 * When importing from a source directory, the library creates a temporary zip file, but doesn't delete the file.
 
-* There is no working code for example programs using the library, included in the distribution here. 
+* There is no working code for example programs using the library, included in the distribution here.
 
 * There is no package versioning strategy (eg, no use of GoPkg.in)
 
