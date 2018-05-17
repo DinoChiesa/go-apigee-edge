@@ -38,11 +38,11 @@ var (
 
 func TestAttributes_Unmarshal(t *testing.T) {
   testCases := []struct {
-    desc      string
-    data      string
-    expected  Attributes
-    wantErr   bool
-    equal     bool
+    desc         string
+    data         string
+    expected     Attributes
+    expectError  bool
+    equal        bool
   }{
     {"one member   ", attrsJson1, attrsMap1, false, true},
     {"two members  ", attrsJson2, attrsMap2, false, true},
@@ -52,8 +52,8 @@ func TestAttributes_Unmarshal(t *testing.T) {
     var got Attributes
     err := json.Unmarshal([]byte(tc.data), &got)
     t.Logf("%s: got=%v", tc.desc, got)
-    if gotErr := err != nil; gotErr != tc.wantErr {
-      t.Errorf("%s: gotErr=%v, wantErr=%v, err=%v", tc.desc, gotErr, tc.wantErr, err)
+    if gotErr := err != nil; gotErr != tc.expectError {
+      t.Errorf("%s: gotErr=%v, expectError=%v, err=%v", tc.desc, gotErr, tc.expectError, err)
       continue
     }
     equal := got.String() == tc.expected.String()
@@ -67,11 +67,11 @@ func TestAttributes_Unmarshal(t *testing.T) {
 
 func TestAttributes_Marshal(t *testing.T) {
   testCases := []struct {
-    desc      string
-    data      Attributes
-    expected  string
-    wantErr   bool
-    equal     bool
+    desc         string
+    data         Attributes
+    expected     string
+    expectError  bool
+    equal        bool
   }{
     {"case 1 ", attrsMap1, attrsJson1, false, true},
     {"case 2 ", attrsMap2, attrsJson2, false, true},
@@ -80,8 +80,8 @@ func TestAttributes_Marshal(t *testing.T) {
   
   for _, tc := range testCases {
     out, err := json.Marshal(tc.data)
-    if gotErr := (err != nil); gotErr != tc.wantErr {
-      t.Errorf("%s: gotErr=%v, wantErr=%v, err=%v", tc.desc, gotErr, tc.wantErr, err)
+    if gotErr := (err != nil); gotErr != tc.expectError {
+      t.Errorf("%s: gotErr=%v, expectError=%v, err=%v", tc.desc, gotErr, tc.expectError, err)
     }
     got := string(out)
     buffer := new(bytes.Buffer)

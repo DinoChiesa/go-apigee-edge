@@ -1,4 +1,4 @@
-// Package apigee provides a client for administering Apigee Edge. 
+// Package apigee provides a client for administering Apigee Edge.
 package apigee
 
 import (
@@ -12,7 +12,7 @@ import (
   "io"
   "io/ioutil"
   "net/http"
-  "net/http/httputil"  
+  "net/http/httputil"
   "net/url"
   "reflect"
   //"strconv"
@@ -34,10 +34,10 @@ const (
 type EdgeClient struct {
   // HTTP client used to communicate with the Edge API.
   client *http.Client
-  
+
   auth *EdgeAuth
   debug bool
-  
+
   // Base URL for API requests.
   BaseURL *url.URL
 
@@ -47,9 +47,12 @@ type EdgeClient struct {
   // Services used for communicating with the API
   Proxies          ProxiesService
   Products         ProductsService
+  Developers       DevelopersService
   Environments     EnvironmentsService
+  Organization     OrganizationService
   Caches           CachesService
-  
+	Options          EdgeClientOptions
+
   // Account           AccountService
   // Actions           ActionsService
   // Domains           DomainsService
@@ -139,7 +142,7 @@ type EdgeClientOptions struct {
 
 // EdgeAuth holds information about how to authenticate to the Edge Management server.
 type EdgeAuth struct {
-  // Optional. The path to the .netrc file that holds credentials for the Edge Management server. 
+  // Optional. The path to the .netrc file that holds credentials for the Edge Management server.
   // By default, this is ${HOME}/.netrc .  If you specify a Password, this option is ignored.
   NetrcPath string
 
@@ -185,13 +188,16 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
     return nil, err
   }
   baseURL.Path = path.Join(baseURL.Path, "v1/o/", o.Org, "/")
-  
+
   c := &EdgeClient{client: httpClient, BaseURL: baseURL, UserAgent: userAgent}
   c.Proxies = &ProxiesServiceOp{client: c}
   c.Products = &ProductsServiceOp{client: c}
+  c.Developers = &DevelopersServiceOp{client: c}
   c.Environments = &EnvironmentsServiceOp{client: c}
+  c.Organization = &OrganizationServiceOp{client: c}
   c.Caches = &CachesServiceOp{client: c}
-  
+  c.Options = *o;
+
   var e error = nil
   if o.Auth == nil {
     c.auth, e = retrieveAuthFromNetrc("", baseURL.Host)
@@ -204,14 +210,14 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
   if e != nil {
     return nil, e
   }
-  
+
   if o.Debug {
     c.debug = true
     c.onRequestCompleted = func(req *http.Request, resp *http.Response)  {
       debugDump(httputil.DumpResponse(resp, true))
     }
   }
-  
+
   // c.Account = &AccountServiceOp{client: c}
   // c.Actions = &ActionsServiceOp{client: c}
   // c.Domains = &DomainsServiceOp{client: c}
@@ -234,8 +240,8 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
 
 // // ClientOpt are options for New.
 // type ClientOpt func(*EdgeClient) error
-// 
-// // New returns a new instance of the client for the Apigee Edge Admin API 
+//
+// // New returns a new instance of the client for the Apigee Edge Admin API
 // func New(httpClient *http.Client, opts ...ClientOpt) (*EdgeClient, error) {
 //   c := NewClient(httpClient)
 //   for _, opt := range opts {
@@ -243,10 +249,10 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
 //       return nil, err
 //     }
 //   }
-// 
+//
 //   return c, nil
 // }
-// 
+//
 // // SetBaseURL is a client option for setting the base URL.
 // func SetBaseURL(baseurl string) ClientOpt {
 //   return func(c *Client) error {
@@ -254,12 +260,12 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient,error) {
 //     if err != nil {
 //       return err
 //     }
-// 
+//
 //     c.BaseURL = u
 //     return nil
 //   }
 // }
-// 
+//
 // // SetUserAgent is a client option for adding a string to the user agent.
 // func SetUserAgent(ua string) ClientOpt {
 //   return func(c *Client) error {
@@ -284,16 +290,18 @@ func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}) (*http.
   // if err != nil {
   //    return nil,err
   // }
-  // 
+  //
   // c.BaseURL = u
   u.Path = path.Join(c.BaseURL.Path, rel.Path)
-  
-  fmt.Printf("u: %#v\n", u)
 
-  var req *http.Request 
+  if c.debug {
+		fmt.Printf("u: %#v\n", u)
+	}
+
+  var req *http.Request
   if body != nil {
-    switch body.(type) { 
-      default: 
+    switch body.(type) {
+      default:
         ctype = appJson
         buf := new(bytes.Buffer)
         err := json.NewEncoder(buf).Encode(body)
@@ -352,43 +360,43 @@ func (c *EdgeClient) Do(req *http.Request, v interface{}) (*Response, error) {
   if c.debug {
     debugDump(httputil.DumpRequestOut(req, true))
   }
-  
-  resp, err := c.client.Do(req)
-  if err != nil {
-    return nil, err
+
+  resp, e := c.client.Do(req)
+  if e != nil {
+    return nil, e
   }
   if c.onRequestCompleted != nil {
     c.onRequestCompleted(req, resp)
   }
 
   defer func() {
-    if rerr := resp.Body.Close(); err == nil {
-      err = rerr
+    if error := resp.Body.Close(); e == nil {
+      e = error
     }
   }()
 
   response := newResponse(resp)
 
-  err = CheckResponse(resp)
-  if err != nil {
-    return response, err
+  e = CheckResponse(resp)
+  if e != nil {
+    return response, e
   }
 
   if v != nil {
     if w, ok := v.(io.Writer); ok {
-      _, err := io.Copy(w, resp.Body)
-      if err != nil {
-        return nil, err
+      _, e := io.Copy(w, resp.Body)
+      if e != nil {
+        return nil, e
       }
     } else {
-      err := json.NewDecoder(resp.Body).Decode(v)
-      if err != nil {
-        return nil, err
+      e := json.NewDecoder(resp.Body).Decode(v)
+      if e != nil {
+        return nil, e
       }
     }
   }
 
-  return response, err
+  return response, e
 }
 
 func (r *ErrorResponse) Error() string {

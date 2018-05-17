@@ -11,6 +11,13 @@ import (
 // This marshals and unmarshals between that format and int.
 type Attributes map[string]string
 
+
+// This is just a wrapper struct to aid in serialization and de-serialization.
+type PropertyWrapper struct {
+  Property      Attributes  `json:"property,omitempty"`
+}
+
+
 // MarshalJSON implements the json.Marshaler interface. It marshals from
 // an Attributes object (which is really a map[string]string) into a JSON that looks like
 //    [ { "name" : "aaaaaa", "value" : "1234abcd"}, { "name" : "...", "value" : "..."} ]

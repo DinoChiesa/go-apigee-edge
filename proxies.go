@@ -15,6 +15,7 @@ import (
 )
 
 const proxiesPath = "apis"
+const proxyDeploymentDelay = "20"
 
 // ProxiesService is an interface for interfacing with the Apigee Edge Admin API
 // dealing with apiproxies.
@@ -300,12 +301,14 @@ func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevisi
   return &returnedProxyRevision, resp, e
 }
 
+
 // Export a revision of an API proxy within an organization, to a filesystem file.
 func (s *ProxiesServiceOp) Export(proxyName string, rev Revision) (string, *Response, error) {
   // curl -u USER:PASSWORD \
   //  http://MGMTSERVER/v1/o/ORGNAME/apis/APINAME/revisions/REVNUMBER?format=bundle > bundle.zip
 
   path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev))
+	// TODO: factor out method: appendQueryParams
   // append the required query param
   origURL, err := url.Parse(path)
   if err != nil {
@@ -383,8 +386,8 @@ func (s *ProxiesServiceOp) Undeploy(proxyName, env string, rev Revision) (*Proxy
   return &deployment, resp, e
 }
 
-// Deploy a revision of an API proxy to a specific environment within an organization.
-func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision) (*ProxyRevisionDeployment, *Response, error) {
+
+func reallyDeployProxy(proxyName, basepath, env string, rev Revision, s *ProxiesServiceOp) (*ProxyRevisionDeployment, *Response, error) {
   path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev), "deployments")
   // append the query params
   origURL, err := url.Parse(path)
@@ -394,8 +397,11 @@ func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision) (*ProxyRe
   q := origURL.Query()
   q.Add("action", "deploy")
   q.Add("override", "true")
-  q.Add("delay", "12")
+  q.Add("delay", proxyDeploymentDelay)
   q.Add("env", env)
+  if basepath != "" {
+		q.Add("basepath", basepath)
+	}
   origURL.RawQuery = q.Encode()
   path = origURL.String()
 
@@ -410,6 +416,16 @@ func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision) (*ProxyRe
     return nil, resp, e
   }
   return &deployment, resp, e
+}
+
+// Deploy a revision of an API proxy to a specific environment within an organization.
+func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision) (*ProxyRevisionDeployment, *Response, error) {
+	return reallyDeployProxy(proxyName, "", env, rev, s)
+}
+
+// Deploy a revision of an API proxy to a specific environment within an organization.
+func (s *ProxiesServiceOp) DeployAtPath(proxyName, basepath, env string, rev Revision) (*ProxyRevisionDeployment, *Response, error) {
+	return reallyDeployProxy(proxyName, basepath, env, rev, s)
 }
 
 // Delete an API Proxy and all its revisions from an organization. This method

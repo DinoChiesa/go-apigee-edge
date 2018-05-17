@@ -29,7 +29,6 @@ func (t *Timestamp) UnmarshalJSON(b []byte) error {
   return nil
 }
 
-
 func (t Timestamp) String() string {
   return fmt.Sprintf("%d", int64(t.Time.UnixNano()) / 1000000)
 }

@@ -29,10 +29,6 @@ type Environment struct {
   Properties      PropertyWrapper `json:"properties,omitempty"`
 }
 
-// This is just a wrapper struct to aid in serialization and de-serialization.
-type PropertyWrapper struct {
-  Property      Attributes  `json:"property,omitempty"`
-}
 
 // List retrieves the list of environment names for the organization referred by the EdgeClient.
 func (s *EnvironmentsServiceOp) List() ([]string, *Response, error) {

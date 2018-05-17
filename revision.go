@@ -24,7 +24,6 @@ func (r *Revision) UnmarshalJSON(b []byte) error {
   if e != nil {
     return e
   }
-
   *r = Revision(rev)
   return nil
 }
