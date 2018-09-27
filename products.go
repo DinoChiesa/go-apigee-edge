@@ -32,7 +32,7 @@ type Product struct {
 	QuotaInterval				string			`json:"quotaInterval,omitempty"`
 	QuotaTimeUnit				string			`json:"quotaTimeUnit,omitempty"`
 	Scopes						[]string		`json:"scopes,omitempty"`
-
+	Environments    			[]string   		`json:"environments,omitempty"`
 }
 
 func (s *ProductsServiceOp) Get(name string) (*Product, *Response, error) {
