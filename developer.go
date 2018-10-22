@@ -1,4 +1,3 @@
-
 package apigee
 
 import (
@@ -21,16 +20,15 @@ type DeveloperServiceOp struct {
 var _ DeveloperService = &DeveloperServiceOp{}
 
 type Developer struct {
-	Email						string			`json:"email,omitempty"`
-	FirstName					string			`json:"firstName,omitempty"`
-	LastName					string			`json:"lastName,omitempty"`
-	UserName					string			`json:"userName,omitempty"`
-	Attributes					[]Attribute		`json:"attributes,omitempty"`
-	DeveloperId					string			`json:"developerId,omitempty"`
+	Email       string      `json:"email,omitempty"`
+	FirstName   string      `json:"firstName,omitempty"`
+	LastName    string      `json:"lastName,omitempty"`
+	UserName    string      `json:"userName,omitempty"`
+	Attributes  []Attribute `json:"attributes,omitempty"`
+	DeveloperId string      `json:"developerId,omitempty"`
 
-	Apps 						[]string		`json:"apps,omitempty"`
-	Status						string			`json:"status,omitempty"`
-
+	Apps   []string `json:"apps,omitempty"`
+	Status string   `json:"status,omitempty"`
 }
 
 func (s *DeveloperServiceOp) Get(email string) (*Developer, *Response, error) {
@@ -55,7 +53,6 @@ func (s *DeveloperServiceOp) Create(developer Developer) (*Developer, *Response,
 	return postOrPutDeveloper(developer, "POST", s)
 
 }
-
 
 func (s *DeveloperServiceOp) Update(developer Developer) (*Developer, *Response, error) {
 
