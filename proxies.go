@@ -1,20 +1,20 @@
 package apigee
 
 import (
-  "archive/zip"
-  "strings"
-  "path"
-  "time"
-  "path/filepath"
-  "os"
-  "fmt"
-  "net/url"
-  "net/http"
-  "io"
-  "io/ioutil"
-  "errors"
-  "log"
-  "strconv"
+	"archive/zip"
+	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"path"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 )
 
 const proxiesPath = "apis"
@@ -22,78 +22,78 @@ const proxiesPath = "apis"
 // ProxiesService is an interface for interfacing with the Apigee Edge Admin API
 // dealing with apiproxies.
 type ProxiesService interface {
-  List() ([]string, *Response, error)
-  Get(string) (*Proxy, *Response, error)
-  Import(string, string) (*ProxyRevision, *Response, error)
-  Delete(string) (*DeletedProxyInfo, *Response, error)
-  DeleteRevision(string, Revision) (*ProxyRevision, *Response, error)
-  Deploy(string,string,Revision,int,bool) (*ProxyRevisionDeployment, *Response, error)
-  ReDeploy(string,string,Revision,int,bool) (*ProxyRevisionDeployments, *Response, error)
-  Undeploy(string,string,Revision) (*ProxyRevisionDeployment, *Response, error)
-  Export(string, Revision) (string, *Response, error)
-  GetDeployments(string) (*ProxyDeployment, *Response, error)
+	List() ([]string, *Response, error)
+	Get(string) (*Proxy, *Response, error)
+	Import(string, string) (*ProxyRevision, *Response, error)
+	Delete(string) (*DeletedProxyInfo, *Response, error)
+	DeleteRevision(string, Revision) (*ProxyRevision, *Response, error)
+	Deploy(string, string, Revision, int, bool) (*ProxyRevisionDeployment, *Response, error)
+	ReDeploy(string, string, Revision, int, bool) (*ProxyRevisionDeployments, *Response, error)
+	Undeploy(string, string, Revision) (*ProxyRevisionDeployment, *Response, error)
+	Export(string, Revision) (string, *Response, error)
+	GetDeployments(string) (*ProxyDeployment, *Response, error)
 }
 
 type ProxiesServiceOp struct {
-  client *EdgeClient
+	client *EdgeClient
 }
 
 var _ ProxiesService = &ProxiesServiceOp{}
 
 // Proxy contains information about an API Proxy within an Edge organization.
 type Proxy struct {
-  Revisions   []Revision    `json:"revision,omitempty"`
-  Name        string        `json:"name,omitempty"`
-  MetaData    ProxyMetadata `json:"metaData,omitempty"`
+	Revisions []Revision    `json:"revision,omitempty"`
+	Name      string        `json:"name,omitempty"`
+	MetaData  ProxyMetadata `json:"metaData,omitempty"`
 }
 
 // ProxyMetadata contains information related to the creation and last modified
 // time and actor for an API Proxy within an organization.
 type ProxyMetadata struct {
-  LastModifiedBy  string     `json:"lastModifiedBy,omitempty"`
-  CreatedBy       string     `json:"createdBy,omitempty"`
-  LastModifiedAt  Timestamp  `json:"lastModifiedAt,omitempty"`
-  CreatedAt       Timestamp  `json:"createdAt,omitempty"`
+	LastModifiedBy string    `json:"lastModifiedBy,omitempty"`
+	CreatedBy      string    `json:"createdBy,omitempty"`
+	LastModifiedAt Timestamp `json:"lastModifiedAt,omitempty"`
+	CreatedAt      Timestamp `json:"createdAt,omitempty"`
 }
 
 // ProxyRevision holds information about a revision of an API Proxy.
 type ProxyRevision struct {
-  CreatedBy       string     `json:"createdBy,omitempty"`
-  CreatedAt       Timestamp  `json:"createdAt,omitempty"`
-  Description     string     `json:"description,omitempty"`
-  ContextInfo     string     `json:"contextInfo,omitempty"`
-  DisplayName     string     `json:"displayName,omitempty"`
-  Name            string     `json:"name,omitempty"`
-  LastModifiedBy  string     `json:"lastModifiedBy,omitempty"`
-  LastModifiedAt  Timestamp  `json:"lastModifiedAt,omitempty"`
-  Revision        Revision   `json:"revision,omitempty"`
-  TargetEndpoints []string   `json:"targetEndpoints,omitempty"`
-  TargetServers   []string   `json:"targetServers,omitempty"`
-  Resources       []string   `json:"resources,omitempty"`
-  ProxyEndpoints  []string   `json:"proxyEndpoints,omitempty"`
-  Policies        []string   `json:"policies,omitempty"`
-  Type            string     `json:"type,omitempty"`
+	CreatedBy       string    `json:"createdBy,omitempty"`
+	CreatedAt       Timestamp `json:"createdAt,omitempty"`
+	Description     string    `json:"description,omitempty"`
+	ContextInfo     string    `json:"contextInfo,omitempty"`
+	DisplayName     string    `json:"displayName,omitempty"`
+	Name            string    `json:"name,omitempty"`
+	LastModifiedBy  string    `json:"lastModifiedBy,omitempty"`
+	LastModifiedAt  Timestamp `json:"lastModifiedAt,omitempty"`
+	Revision        Revision  `json:"revision,omitempty"`
+	TargetEndpoints []string  `json:"targetEndpoints,omitempty"`
+	TargetServers   []string  `json:"targetServers,omitempty"`
+	Resources       []string  `json:"resources,omitempty"`
+	ProxyEndpoints  []string  `json:"proxyEndpoints,omitempty"`
+	Policies        []string  `json:"policies,omitempty"`
+	Type            string    `json:"type,omitempty"`
 }
 
 // ProxyRevisionDeployment holds information about the deployment state of a
 // single revision of an API Proxy.
 type ProxyRevisionDeployment struct {
-  Name            string        `json:"aPIProxy,omitempty"`
-  Revision        Revision      `json:"revision,omitempty"`
-  Environment     string        `json:"environment,omitempty"`
-  Organization    string        `json:"organization,omitempty"`
-  State           string        `json:"state,omitempty"`
-  Servers         []EdgeServer  `json:"server,omitempty"`
+	Name         string       `json:"aPIProxy,omitempty"`
+	Revision     Revision     `json:"revision,omitempty"`
+	Environment  string       `json:"environment,omitempty"`
+	Organization string       `json:"organization,omitempty"`
+	State        string       `json:"state,omitempty"`
+	Servers      []EdgeServer `json:"server,omitempty"`
 }
 
 // ProxyRevisionDeployment holds information about the deployment state of a
 // single revision of an API Proxy.
 type ProxyRevisionDeployments struct {
-  Name            string                        `json:"aPIProxy,omitempty"`
-  Environments    []ProxyRevisionDeployment     `json:"environment,omitempty"`
-  Organization    string                        `json:"organization,omitempty"`
+	Name         string                    `json:"aPIProxy,omitempty"`
+	Environments []ProxyRevisionDeployment `json:"environment,omitempty"`
+	Organization string                    `json:"organization,omitempty"`
 }
- 
+
 // When inquiring the deployment status of an API PRoxy revision, even implicitly
 // as when performing a Deploy or Undeploy, the response includes the deployment
 // status for each particular Edge Server in the environment. This struct
@@ -103,35 +103,34 @@ type ProxyRevisionDeployments struct {
 // experiencing a problem and cannot undeploy, or more commonly, cannot deploy an
 // API Proxy, this struct will hold relevant information.
 type EdgeServer struct {
-  Status          string        `json:"status,omitempty"`
-  Uuid            string        `json:"uUID,omitempty"`
-  Type            []string      `json:"type,omitempty"`
+	Status string   `json:"status,omitempty"`
+	Uuid   string   `json:"uUID,omitempty"`
+	Type   []string `json:"type,omitempty"`
 }
 
- 
 // ProxyDeployment holds information about the deployment state of a
 // all revisions of an API Proxy.
 type ProxyDeployment struct {
-  Environments    []EnvironmentDeployment   `json:"environment,omitempty"`
-  Name            string                    `json:"name,omitempty"`
-  Organization    string                    `json:"organization,omitempty"`
+	Environments []EnvironmentDeployment `json:"environment,omitempty"`
+	Name         string                  `json:"name,omitempty"`
+	Organization string                  `json:"organization,omitempty"`
 }
 
 type EnvironmentDeployment struct {
-  Name            string                `json:"name,omitempty"`
-  Revision        []RevisionDeployment  `json:"revision,omitempty"`
+	Name     string               `json:"name,omitempty"`
+	Revision []RevisionDeployment `json:"revision,omitempty"`
 }
 
 type RevisionDeployment struct {
-  Number        Revision      `json:"name,omitempty"`
-  State         string        `json:"state,omitempty"`
-  Servers       []EdgeServer  `json:"server,omitempty"`
+	Number  Revision     `json:"name,omitempty"`
+	State   string       `json:"state,omitempty"`
+	Servers []EdgeServer `json:"server,omitempty"`
 }
 
 // When Delete returns successfully, it returns a payload that contains very little useful
 // information. This struct deserializes that information.
 type DeletedProxyInfo struct {
-  Name   string   `json:"name,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 // type proxiesRoot struct {
@@ -140,111 +139,109 @@ type DeletedProxyInfo struct {
 
 // List retrieves the list of apiproxy names for the organization referred by the EdgeClient.
 func (s *ProxiesServiceOp) List() ([]string, *Response, error) {
-  req, e := s.client.NewRequest("GET", proxiesPath, nil, "")
-  if e != nil {
-    return nil, nil, e
-  }
-  namelist := make([]string,0)
-  resp, e := s.client.Do(req, &namelist)
-  if e != nil {
-    return nil, resp, e
-  }
-  return namelist, resp, e
+	req, e := s.client.NewRequest("GET", proxiesPath, nil, "")
+	if e != nil {
+		return nil, nil, e
+	}
+	namelist := make([]string, 0)
+	resp, e := s.client.Do(req, &namelist)
+	if e != nil {
+		return nil, resp, e
+	}
+	return namelist, resp, e
 }
 
 // Get retrieves the information about an API Proxy in an organization, information including
 // the list of available revisions, and the created and last modified dates and actors.
 func (s *ProxiesServiceOp) Get(proxy string) (*Proxy, *Response, error) {
-  path := path.Join(proxiesPath, proxy)
-  req, e := s.client.NewRequest("GET", path, nil, "")
-  if e != nil {
-    return nil, nil, e
-  }
-  returnedProxy := Proxy{}
-  resp, e := s.client.Do(req, &returnedProxy)
-  if e != nil {
-    return nil, resp, e
-  }
-  return &returnedProxy, resp, e
+	path := path.Join(proxiesPath, proxy)
+	req, e := s.client.NewRequest("GET", path, nil, "")
+	if e != nil {
+		return nil, nil, e
+	}
+	returnedProxy := Proxy{}
+	resp, e := s.client.Do(req, &returnedProxy)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &returnedProxy, resp, e
 }
-
 
 func smartFilter(path string) bool {
-  if strings.HasSuffix(path, "~") {
-    return false
-  }
-  if strings.HasSuffix(path, "#") && strings.HasPrefix(path, "#") {
-    return false
-  }
-  return true
+	if strings.HasSuffix(path, "~") {
+		return false
+	}
+	if strings.HasSuffix(path, "#") && strings.HasPrefix(path, "#") {
+		return false
+	}
+	return true
 }
 
-func zipDirectory (source string, target string, filter func(string) bool) error {
-  zipfile, err := os.Create(target)
-  if err != nil {
-    return err
-  }
-  defer zipfile.Close()
+func zipDirectory(source string, target string, filter func(string) bool) error {
+	zipfile, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+	defer zipfile.Close()
 
-  archive := zip.NewWriter(zipfile)
-  defer archive.Close()
+	archive := zip.NewWriter(zipfile)
+	defer archive.Close()
 
-  info, err := os.Stat(source)
-  if err != nil {
-    return nil
-  }
+	info, err := os.Stat(source)
+	if err != nil {
+		return nil
+	}
 
-  var baseDir string
-  if info.IsDir() {
-    baseDir = filepath.Base(source)
-  }
+	var baseDir string
+	if info.IsDir() {
+		baseDir = filepath.Base(source)
+	}
 
-  filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
-    if filter == nil || filter(path) {
-      if err != nil {
-        return err
-      }
+	filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+		if filter == nil || filter(path) {
+			if err != nil {
+				return err
+			}
 
-      header, err := zip.FileInfoHeader(info)
-      if err != nil {
-        return err
-      }
+			header, err := zip.FileInfoHeader(info)
+			if err != nil {
+				return err
+			}
 
-      if baseDir != "" {
-        header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
-      }
+			if baseDir != "" {
+				header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
+			}
 
-      // This archive will be unzipped by a Java process.  When ZIP64 extensions
-      // are used, Java insists on having Deflate as the compression method (0x08)
-      // even for directories.
-      header.Method = zip.Deflate
-      
-      if info.IsDir() {
-        header.Name += "/"
-      } 
+			// This archive will be unzipped by a Java process.  When ZIP64 extensions
+			// are used, Java insists on having Deflate as the compression method (0x08)
+			// even for directories.
+			header.Method = zip.Deflate
 
-      writer, err := archive.CreateHeader(header)
-      if err != nil {
-        return err
-      }
+			if info.IsDir() {
+				header.Name += "/"
+			}
 
-      if info.IsDir() {
-        return nil
-      }
+			writer, err := archive.CreateHeader(header)
+			if err != nil {
+				return err
+			}
 
-      file, err := os.Open(path)
-      if err != nil {
-        return err
-      }
-      defer file.Close()
-      _, err = io.Copy(writer, file)
-    }
-    return err
-  })
+			if info.IsDir() {
+				return nil
+			}
 
-  return err
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+			_, err = io.Copy(writer, file)
+		}
+		return err
+	})
+
+	return err
 }
-
 
 // Import an API proxy into an organization, creating a new API Proxy revision.
 // The proxyName can be passed as "nil" in which case the name is derived from the source.
@@ -252,199 +249,199 @@ func zipDirectory (source string, target string, filter func(string) bool) error
 // the path of a zip file containing an API Proxy bundle. Returns the API proxy revision information.
 // This method does not deploy the imported proxy. See the Deploy method.
 func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevision, *Response, error) {
-  info, err := os.Stat(source)
-  if err != nil {
-    return nil, nil, err
-  }
-  zipfileName := source
+	info, err := os.Stat(source)
+	if err != nil {
+		return nil, nil, err
+	}
+	zipfileName := source
 
-  log.Printf("[INFO] *** Import *** isDir: %#v\n", info.IsDir())
+	log.Printf("[INFO] *** Import *** isDir: %#v\n", info.IsDir())
 
-  if info.IsDir() {
-    // create a temporary zip file
-    if proxyName == "" {
-      proxyName = filepath.Base(source) 
-    }
-    log.Printf("[INFO] *** Import *** proxyName: %#v\n", proxyName)
-    tempDir, e := ioutil.TempDir("", "go-apigee-edge-")
-    if e != nil {
-      log.Printf("[ERROR] *** Import *** error: %#v\n", e)
-      return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
-    }
-    log.Printf("[INFO] *** Import *** tempDir: %#v\n", tempDir)
-    log.Printf("[INFO] *** Import *** sourceDir: %#v\n", source)
-    zipfileName = path.Join(tempDir, "apiproxy.zip")
-    e = zipDirectory (path.Join(source, "apiproxy"), zipfileName, smartFilter)
-    if e != nil {
-      return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
-    }
-    log.Printf("[INFO] *** zipped %s into %s\n\n", source, zipfileName)
-  }
+	if info.IsDir() {
+		// create a temporary zip file
+		if proxyName == "" {
+			proxyName = filepath.Base(source)
+		}
+		log.Printf("[INFO] *** Import *** proxyName: %#v\n", proxyName)
+		tempDir, e := ioutil.TempDir("", "go-apigee-edge-")
+		if e != nil {
+			log.Printf("[ERROR] *** Import *** error: %#v\n", e)
+			return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
+		}
+		log.Printf("[INFO] *** Import *** tempDir: %#v\n", tempDir)
+		log.Printf("[INFO] *** Import *** sourceDir: %#v\n", source)
+		zipfileName = path.Join(tempDir, "apiproxy.zip")
+		e = zipDirectory(path.Join(source, "apiproxy"), zipfileName, smartFilter)
+		if e != nil {
+			return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
+		}
+		log.Printf("[INFO] *** zipped %s into %s\n\n", source, zipfileName)
+	}
 
-  if !strings.HasSuffix(zipfileName,".zip") {
-    return nil, nil, errors.New("source must be a zipfile")
-  }
-  
-  info, err = os.Stat(zipfileName)
-  if err != nil {
-    return nil, nil, err
-  }
+	if !strings.HasSuffix(zipfileName, ".zip") {
+		return nil, nil, errors.New("source must be a zipfile")
+	}
 
-  // append the query params
-  origURL, err := url.Parse(proxiesPath)
-  if err != nil {
-     return nil, nil, err
-  }
-  q := origURL.Query()
-  q.Add("action", "import")
-  q.Add("name", proxyName)
-  origURL.RawQuery = q.Encode()
-  path := origURL.String()
-  
-  ioreader, err := os.Open(zipfileName)
-  if err != nil {
-     return nil, nil, err
-  }
-  defer ioreader.Close()
-  
-  req, e := s.client.NewRequest("POST", path, ioreader, "")
-  if e != nil {
-    return nil, nil, e
-  }
-  returnedProxyRevision := ProxyRevision{}
-  resp, e := s.client.Do(req, &returnedProxyRevision)
-  if e != nil {
-    return nil, resp, e
-  }
-  return &returnedProxyRevision, resp, e
+	info, err = os.Stat(zipfileName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// append the query params
+	origURL, err := url.Parse(proxiesPath)
+	if err != nil {
+		return nil, nil, err
+	}
+	q := origURL.Query()
+	q.Add("action", "import")
+	q.Add("name", proxyName)
+	origURL.RawQuery = q.Encode()
+	path := origURL.String()
+
+	ioreader, err := os.Open(zipfileName)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer ioreader.Close()
+
+	req, e := s.client.NewRequest("POST", path, ioreader, "")
+	if e != nil {
+		return nil, nil, e
+	}
+	returnedProxyRevision := ProxyRevision{}
+	resp, e := s.client.Do(req, &returnedProxyRevision)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &returnedProxyRevision, resp, e
 }
 
 // Export a revision of an API proxy within an organization, to a filesystem file.
 func (s *ProxiesServiceOp) Export(proxyName string, rev Revision) (string, *Response, error) {
-  // curl -u USER:PASSWORD \
-  //  http://MGMTSERVER/v1/o/ORGNAME/apis/APINAME/revisions/REVNUMBER?format=bundle > bundle.zip
+	// curl -u USER:PASSWORD \
+	//  http://MGMTSERVER/v1/o/ORGNAME/apis/APINAME/revisions/REVNUMBER?format=bundle > bundle.zip
 
-  path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev))
-  // append the required query param
-  origURL, err := url.Parse(path)
-  if err != nil {
-     return "", nil, err
-  }
-  q := origURL.Query()
-  q.Add("format", "bundle")
-  origURL.RawQuery = q.Encode()
-  path = origURL.String()
+	path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d", rev))
+	// append the required query param
+	origURL, err := url.Parse(path)
+	if err != nil {
+		return "", nil, err
+	}
+	q := origURL.Query()
+	q.Add("format", "bundle")
+	origURL.RawQuery = q.Encode()
+	path = origURL.String()
 
-  req, e := s.client.NewRequest("GET", path, nil, "")
-  if e != nil {
-    return "", nil, e
-  }
-  req.Header.Del("Accept")
+	req, e := s.client.NewRequest("GET", path, nil, "")
+	if e != nil {
+		return "", nil, e
+	}
+	req.Header.Del("Accept")
 
-  t := time.Now()
-  filename := fmt.Sprintf("proxyName-r%d-%d%02d%02d-%02d%02d%02d.zip",
-    rev, t.Year(), t.Month(), t.Day(),
-    t.Hour(), t.Minute(), t.Second())
+	t := time.Now()
+	filename := fmt.Sprintf("proxyName-r%d-%d%02d%02d-%02d%02d%02d.zip",
+		rev, t.Year(), t.Month(), t.Day(),
+		t.Hour(), t.Minute(), t.Second())
 
-  out, e := os.Create(filename)
-  if e != nil {
-    return "", nil, e
-  }
-  
-  resp, e := s.client.Do(req, out)
-  if e != nil {
-    return "", resp, e
-  }
-  out.Close()
-  return filename, resp, e
+	out, e := os.Create(filename)
+	if e != nil {
+		return "", nil, e
+	}
+
+	resp, e := s.client.Do(req, out)
+	if e != nil {
+		return "", resp, e
+	}
+	out.Close()
+	return filename, resp, e
 }
 
 // DeleteRevision deletes a specific revision of an API Proxy from an organization.
 // The revision must exist, and must not be currently deployed.
 func (s *ProxiesServiceOp) DeleteRevision(proxyName string, rev Revision) (*ProxyRevision, *Response, error) {
-  path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev))
-  req, e := s.client.NewRequest("DELETE", path, nil, "")
-  if e != nil {
-    return nil, nil, e
-  }
-  proxyRev := ProxyRevision{}
-  resp, e := s.client.Do(req, &proxyRev)
-  if e != nil {
-    return nil, resp, e
-  }
-  return &proxyRev, resp, e
+	path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d", rev))
+	req, e := s.client.NewRequest("DELETE", path, nil, "")
+	if e != nil {
+		return nil, nil, e
+	}
+	proxyRev := ProxyRevision{}
+	resp, e := s.client.Do(req, &proxyRev)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &proxyRev, resp, e
 }
 
 // Undeploy a specific revision of an API Proxy from a particular environment within an Edge organization.
 func (s *ProxiesServiceOp) Undeploy(proxyName, env string, rev Revision) (*ProxyRevisionDeployment, *Response, error) {
-  path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev), "deployments")
-  // append the query params
-  origURL, err := url.Parse(path)
-  if err != nil {
-     return nil, nil, err
-  }
-  q := origURL.Query()
-  q.Add("action", "undeploy")
-  q.Add("env", env)
-  origURL.RawQuery = q.Encode()
-  path = origURL.String()
-  
-  req, e := s.client.NewRequest("POST", path, nil,  "")
-  if e != nil {
-    return nil, nil, e
-  }
-  
-  deployment := ProxyRevisionDeployment{}
-  resp, e := s.client.Do(req, &deployment)
-  if e != nil {
-    return nil, resp, e
-  }
-  return &deployment, resp, e
+	path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d", rev), "deployments")
+	// append the query params
+	origURL, err := url.Parse(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	q := origURL.Query()
+	q.Add("action", "undeploy")
+	q.Add("env", env)
+	origURL.RawQuery = q.Encode()
+	path = origURL.String()
+
+	req, e := s.client.NewRequest("POST", path, nil, "")
+	if e != nil {
+		return nil, nil, e
+	}
+
+	deployment := ProxyRevisionDeployment{}
+	resp, e := s.client.Do(req, &deployment)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &deployment, resp, e
 }
 
 // Deploy a revision of an API proxy to a specific environment within an organization.
 func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision, delay int, override bool) (*ProxyRevisionDeployment, *Response, error) {
 
-  req, e := prepareDeployRequest(proxyName, env, rev, delay, override, s)
+	req, e := prepareDeployRequest(proxyName, env, rev, delay, override, s)
 
-  deployment := ProxyRevisionDeployment{}
-  resp, e := s.client.Do(req, &deployment)
+	deployment := ProxyRevisionDeployment{}
+	resp, e := s.client.Do(req, &deployment)
 
-  return &deployment, resp, e
+	return &deployment, resp, e
 
 }
 
 //isn't is nice that the return data structure changes on the second revision deployment?! NO!
 func (s *ProxiesServiceOp) ReDeploy(proxyName, env string, rev Revision, delay int, override bool) (*ProxyRevisionDeployments, *Response, error) {
 
-  req, e := prepareDeployRequest(proxyName, env, rev, delay, override, s)
+	req, e := prepareDeployRequest(proxyName, env, rev, delay, override, s)
 
-  deployment := ProxyRevisionDeployments{}
-  resp, e := s.client.Do(req, &deployment)
+	deployment := ProxyRevisionDeployments{}
+	resp, e := s.client.Do(req, &deployment)
 
-  return &deployment, resp, e
+	return &deployment, resp, e
 
 }
 
 func prepareDeployRequest(proxyName, env string, rev Revision, delay int, override bool, s *ProxiesServiceOp) (*http.Request, error) {
 
-  path := path.Join("environments", env, proxiesPath, proxyName, "revisions", fmt.Sprintf("%d",rev), "deployments")
-  // append the query params
-  origURL, err := url.Parse(path)
-  if err != nil {
-    return nil, err
-  }
-  q := origURL.Query()
-  q.Add("override", strconv.FormatBool(override))
-  q.Add("delay", fmt.Sprintf("%d",delay))
-  origURL.RawQuery = q.Encode()
-  path = origURL.String()
+	path := path.Join("environments", env, proxiesPath, proxyName, "revisions", fmt.Sprintf("%d", rev), "deployments")
+	// append the query params
+	origURL, err := url.Parse(path)
+	if err != nil {
+		return nil, err
+	}
+	q := origURL.Query()
+	q.Add("override", strconv.FormatBool(override))
+	q.Add("delay", fmt.Sprintf("%d", delay))
+	origURL.RawQuery = q.Encode()
+	path = origURL.String()
 
-  req, e := s.client.NewRequest("POST", path, nil, "application/x-www-form-urlencoded")
-  if e != nil {
-    return nil, e
-  }
-  return req, e
+	req, e := s.client.NewRequest("POST", path, nil, "application/x-www-form-urlencoded")
+	if e != nil {
+		return nil, e
+	}
+	return req, e
 
 }
 
@@ -452,31 +449,31 @@ func prepareDeployRequest(proxyName, env string, rev Revision, delay int, overri
 // will fail if any of the revisions of the named API Proxy are currently deployed
 // in any environment.
 func (s *ProxiesServiceOp) Delete(proxyName string) (*DeletedProxyInfo, *Response, error) {
-  path := path.Join(proxiesPath, proxyName)
-  req, e := s.client.NewRequest("DELETE", path, nil, "")
-  if e != nil {
-    return nil, nil, e
-  }
-  proxy := DeletedProxyInfo{}
-  resp, e := s.client.Do(req, &proxy)
-  if e != nil {
-    return nil, resp, e
-  }
-  return &proxy, resp, e
+	path := path.Join(proxiesPath, proxyName)
+	req, e := s.client.NewRequest("DELETE", path, nil, "")
+	if e != nil {
+		return nil, nil, e
+	}
+	proxy := DeletedProxyInfo{}
+	resp, e := s.client.Do(req, &proxy)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &proxy, resp, e
 }
 
 // GetDeployments retrieves the information about deployments of an API Proxy in
 // an organization, including the environment names and revision numbers.
 func (s *ProxiesServiceOp) GetDeployments(proxy string) (*ProxyDeployment, *Response, error) {
-  path := path.Join(proxiesPath, proxy, "deployments")
-  req, e := s.client.NewRequest("GET", path, nil, "")
-  if e != nil {
-    return nil, nil, e
-  }
-  deployments := ProxyDeployment{}
-  resp, e := s.client.Do(req, &deployments)
-  if e != nil {
-    return nil, resp, e
-  }
-  return &deployments, resp, e
+	path := path.Join(proxiesPath, proxy, "deployments")
+	req, e := s.client.NewRequest("GET", path, nil, "")
+	if e != nil {
+		return nil, nil, e
+	}
+	deployments := ProxyDeployment{}
+	resp, e := s.client.Do(req, &deployments)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &deployments, resp, e
 }

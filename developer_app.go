@@ -1,4 +1,3 @@
-
 package apigee
 
 import (
@@ -21,18 +20,17 @@ type DeveloperAppServiceOp struct {
 var _ DeveloperAppService = &DeveloperAppServiceOp{}
 
 type DeveloperApp struct {
-	Name						string			`json:"name,omitempty"`
-	ApiProducts 				[]string		`json:"apiProducts,omitempty"`
-	KeyExpiresIn				int				`json:"keyExpiresIn,omitempty"`
-	Attributes					[]Attribute		`json:"attributes,omitempty"`
-	Scopes						[]string		`json:"scopes,omitempty"`
-	CallbackUrl					string			`json:"callbackUrl,omitempty"`
-	Credentials					[]Credential	`json:"credentials,omitempty"`
-	AppId						string			`json:"appId,omitempty"`
-	DeveloperId					string			`json:"developerId,omitempty"`
-	AppFamily					string			`json:"appFamily,omitempty"`
-	Status						string			`json:"status,omitempty"`
-
+	Name         string       `json:"name,omitempty"`
+	ApiProducts  []string     `json:"apiProducts,omitempty"`
+	KeyExpiresIn int          `json:"keyExpiresIn,omitempty"`
+	Attributes   []Attribute  `json:"attributes,omitempty"`
+	Scopes       []string     `json:"scopes,omitempty"`
+	CallbackUrl  string       `json:"callbackUrl,omitempty"`
+	Credentials  []Credential `json:"credentials,omitempty"`
+	AppId        string       `json:"appId,omitempty"`
+	DeveloperId  string       `json:"developerId,omitempty"`
+	AppFamily    string       `json:"appFamily,omitempty"`
+	Status       string       `json:"status,omitempty"`
 }
 
 func (s *DeveloperAppServiceOp) Get(email string, name string) (*DeveloperApp, *Response, error) {
@@ -57,7 +55,6 @@ func (s *DeveloperAppServiceOp) Create(email string, developerApp DeveloperApp) 
 	return postOrPutDeveloperApp(email, developerApp, "POST", s)
 
 }
-
 
 func (s *DeveloperAppServiceOp) Update(email string, developerApp DeveloperApp) (*DeveloperApp, *Response, error) {
 

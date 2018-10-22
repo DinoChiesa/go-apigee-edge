@@ -1,4 +1,3 @@
-
 package apigee
 
 import (
@@ -21,12 +20,12 @@ type CompanyServiceOp struct {
 var _ CompanyService = &CompanyServiceOp{}
 
 type Company struct {
-	Name						string			`json:"name,omitempty"`
-	DisplayName					string			`json:"displayName,omitempty"`
-	Attributes					[]Attribute		`json:"attributes,omitempty"`
+	Name        string      `json:"name,omitempty"`
+	DisplayName string      `json:"displayName,omitempty"`
+	Attributes  []Attribute `json:"attributes,omitempty"`
 
-	Status						string			`json:"status,omitempty"`
-	Apps 						[]string		`json:"apps,omitempty"`
+	Status string   `json:"status,omitempty"`
+	Apps   []string `json:"apps,omitempty"`
 }
 
 func (s *CompanyServiceOp) Get(name string) (*Company, *Response, error) {
@@ -51,7 +50,6 @@ func (s *CompanyServiceOp) Create(company Company) (*Company, *Response, error) 
 	return postOrPutCompany(company, "POST", s)
 
 }
-
 
 func (s *CompanyServiceOp) Update(company Company) (*Company, *Response, error) {
 
