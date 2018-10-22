@@ -1,4 +1,3 @@
-
 package apigee
 
 import (
@@ -21,17 +20,16 @@ type CompanyAppServiceOp struct {
 var _ CompanyAppService = &CompanyAppServiceOp{}
 
 type CompanyApp struct {
-	Name						string			`json:"name,omitempty"`
-	ApiProducts 				[]string		`json:"apiProducts,omitempty"`
-	Attributes					[]Attribute		`json:"attributes,omitempty"`
-	Scopes						[]string		`json:"scopes,omitempty"`
-	CallbackUrl					string			`json:"callbackUrl,omitempty"`
-	Credentials					[]Credential	`json:"credentials,omitempty"`
-	AppId						string			`json:"appId,omitempty"`
-	CompanyName					string			`json:"companyName,omitempty"`
-	AppFamily					string			`json:"appFamily,omitempty"`
-	Status						string			`json:"status,omitempty"`
-
+	Name        string       `json:"name,omitempty"`
+	ApiProducts []string     `json:"apiProducts,omitempty"`
+	Attributes  []Attribute  `json:"attributes,omitempty"`
+	Scopes      []string     `json:"scopes,omitempty"`
+	CallbackUrl string       `json:"callbackUrl,omitempty"`
+	Credentials []Credential `json:"credentials,omitempty"`
+	AppId       string       `json:"appId,omitempty"`
+	CompanyName string       `json:"companyName,omitempty"`
+	AppFamily   string       `json:"appFamily,omitempty"`
+	Status      string       `json:"status,omitempty"`
 }
 
 func (s *CompanyAppServiceOp) Get(companyName string, name string) (*CompanyApp, *Response, error) {
@@ -56,7 +54,6 @@ func (s *CompanyAppServiceOp) Create(companyName string, companyApp CompanyApp) 
 	return postOrPutCompanyApp(companyName, companyApp, "POST", s)
 
 }
-
 
 func (s *CompanyAppServiceOp) Update(companyName string, companyApp CompanyApp) (*CompanyApp, *Response, error) {
 

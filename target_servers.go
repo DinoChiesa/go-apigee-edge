@@ -20,23 +20,23 @@ type TargetServersServiceOp struct {
 var _ TargetServersService = &TargetServersServiceOp{}
 
 type TargetServer struct {
-	Name						string		`json:"name,omitempty"`
-	Host						string		`json:"host,omitempty"`
-	Enabled						bool		`json:"isEnabled"`
-	Port						int			`json:"port,omitempty"`
-	SSLInfo						SSLInfo		`json:"sSLInfo,omitempty"`
+	Name    string  `json:"name,omitempty"`
+	Host    string  `json:"host,omitempty"`
+	Enabled bool    `json:"isEnabled"`
+	Port    int     `json:"port,omitempty"`
+	SSLInfo SSLInfo `json:"sSLInfo,omitempty"`
 }
 
 // For some reason Apigee returns SOME bools as strings and others a bools.
 type SSLInfo struct {
-	SSLEnabled   				string      `json:"enabled,omitempty"`
-	ClientAuthEnabled   		string      `json:"clientAuthEnabled,omitempty"`
-	KeyStore					string 		`json:"keyStore,omitempty"`
-	TrustStore					string 		`json:"trustStore,omitempty"`
-	KeyAlias					string 		`json:"keyAlias,omitempty"`
-	Ciphers   					[]string    `json:"ciphers,omitempty"`
-	IgnoreValidationErrors		bool		`json:"ignoreValidationErrors"`
-	Protocols   				[]string    `json:"protocols,omitempty"`
+	SSLEnabled             string   `json:"enabled,omitempty"`
+	ClientAuthEnabled      string   `json:"clientAuthEnabled,omitempty"`
+	KeyStore               string   `json:"keyStore,omitempty"`
+	TrustStore             string   `json:"trustStore,omitempty"`
+	KeyAlias               string   `json:"keyAlias,omitempty"`
+	Ciphers                []string `json:"ciphers,omitempty"`
+	IgnoreValidationErrors bool     `json:"ignoreValidationErrors"`
+	Protocols              []string `json:"protocols,omitempty"`
 }
 
 func (s *TargetServersServiceOp) Get(name string, env string) (*TargetServer, *Response, error) {
@@ -85,7 +85,6 @@ func (s *TargetServersServiceOp) Delete(name string, env string) (*Response, err
 	return resp, e
 
 }
-
 
 func postOrPutTargetServer(targetServer TargetServer, env string, opType string, s *TargetServersServiceOp) (*TargetServer, *Response, error) {
 

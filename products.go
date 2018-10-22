@@ -1,4 +1,3 @@
-
 package apigee
 
 import (
@@ -21,18 +20,18 @@ type ProductsServiceOp struct {
 var _ ProductsService = &ProductsServiceOp{}
 
 type Product struct {
-	Name						string			`json:"name,omitempty"`
-	DisplayName					string			`json:"displayName,omitempty"`
-	ApprovalType				string			`json:"approvalType,omitempty"` //manual or auto
-	Attributes					[]Attribute		`json:"attributes,omitempty"`
-	Description					string			`json:"description,omitempty"`
-	ApiResources				[]string		`json:"apiResources,omitempty"`
-	Proxies						[]string		`json:"proxies,omitempty"`
-	Quota						string			`json:"quota,omitempty"`
-	QuotaInterval				string			`json:"quotaInterval,omitempty"`
-	QuotaTimeUnit				string			`json:"quotaTimeUnit,omitempty"`
-	Scopes						[]string		`json:"scopes,omitempty"`
-	Environments    			[]string   		`json:"environments,omitempty"`
+	Name          string      `json:"name,omitempty"`
+	DisplayName   string      `json:"displayName,omitempty"`
+	ApprovalType  string      `json:"approvalType,omitempty"` //manual or auto
+	Attributes    []Attribute `json:"attributes,omitempty"`
+	Description   string      `json:"description,omitempty"`
+	ApiResources  []string    `json:"apiResources,omitempty"`
+	Proxies       []string    `json:"proxies,omitempty"`
+	Quota         string      `json:"quota,omitempty"`
+	QuotaInterval string      `json:"quotaInterval,omitempty"`
+	QuotaTimeUnit string      `json:"quotaTimeUnit,omitempty"`
+	Scopes        []string    `json:"scopes,omitempty"`
+	Environments  []string    `json:"environments,omitempty"`
 }
 
 func (s *ProductsServiceOp) Get(name string) (*Product, *Response, error) {
@@ -81,7 +80,6 @@ func (s *ProductsServiceOp) Delete(name string) (*Response, error) {
 	return resp, e
 
 }
-
 
 func postOrPutProduct(product Product, opType string, s *ProductsServiceOp) (*Product, *Response, error) {
 
