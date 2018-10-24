@@ -15,8 +15,6 @@ import (
 	"os"
 	"path"
 	"reflect"
-	//"strconv"
-	//"time"
 
 	"github.com/bgentry/go-netrc/netrc"
 	"github.com/google/go-querystring/query"
@@ -27,7 +25,7 @@ const (
 	libraryVersion = "0.1.0"
 	defaultBaseURL = "https://api.enterprise.apigee.com/"
 	userAgent      = "go-apigee-edge/" + libraryVersion
-	appJson        = "application/json"
+	appJSON        = "application/json"
 	octetStream    = "application/octet-stream"
 )
 
@@ -152,6 +150,9 @@ type EdgeAuth struct {
 
 	// Optional. Used if you explicitly specify a Password.
 	Password string
+
+	// Optional. Access token used for OAuth
+	AccessToken string
 }
 
 func retrieveAuthFromNetrc(netrcPath, host string) (*EdgeAuth, error) {
@@ -202,6 +203,8 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient, error) {
 	var e error = nil
 	if o.Auth == nil {
 		c.auth, e = retrieveAuthFromNetrc("", baseURL.Host)
+	} else if o.Auth.AccessToken != "" {
+		c.auth = &EdgeAuth{AccessToken: o.Auth.AccessToken}
 	} else if o.Auth.Password == "" {
 		c.auth, e = retrieveAuthFromNetrc(o.Auth.NetrcPath, baseURL.Host)
 	} else {
@@ -219,60 +222,8 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient, error) {
 		}
 	}
 
-	// c.Account = &AccountServiceOp{client: c}
-	// c.Actions = &ActionsServiceOp{client: c}
-	// c.Domains = &DomainsServiceOp{client: c}
-	// c.Droplets = &DropletsServiceOp{client: c}
-	// c.DropletActions = &DropletActionsServiceOp{client: c}
-	// c.Images = &ImagesServiceOp{client: c}
-	// c.ImageActions = &ImageActionsServiceOp{client: c}
-	// c.Keys = &KeysServiceOp{client: c}
-	// c.Regions = &RegionsServiceOp{client: c}
-	// c.Sizes = &SizesServiceOp{client: c}
-	// c.FloatingIPs = &FloatingIPsServiceOp{client: c}
-	// c.FloatingIPActions = &FloatingIPActionsServiceOp{client: c}
-	// c.Storage = &StorageServiceOp{client: c}
-	// c.StorageActions = &StorageActionsServiceOp{client: c}
-	// c.Tags = &TagsServiceOp{client: c}
-
 	return c, nil
 }
-
-// // ClientOpt are options for New.
-// type ClientOpt func(*EdgeClient) error
-//
-// // New returns a new instance of the client for the Apigee Edge Admin API
-// func New(httpClient *http.Client, opts ...ClientOpt) (*EdgeClient, error) {
-//   c := NewClient(httpClient)
-//   for _, opt := range opts {
-//     if err := opt(c); err != nil {
-//       return nil, err
-//     }
-//   }
-//
-//   return c, nil
-// }
-//
-// // SetBaseURL is a client option for setting the base URL.
-// func SetBaseURL(baseurl string) ClientOpt {
-//   return func(c *Client) error {
-//     u, err := url.Parse(baseurl)
-//     if err != nil {
-//       return err
-//     }
-//
-//     c.BaseURL = u
-//     return nil
-//   }
-// }
-//
-// // SetUserAgent is a client option for adding a string to the user agent.
-// func SetUserAgent(ua string) ClientOpt {
-//   return func(c *Client) error {
-//     c.UserAgent = fmt.Sprintf("%s+%s", ua, c.UserAgent)
-//     return nil
-//   }
-// }
 
 // NewRequest creates an API request. A relative URL can be provided in urlStr,
 // which will be resolved to the BaseURL of the Client. Relative URLS should
@@ -284,14 +235,7 @@ func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}, content
 	if err != nil {
 		return nil, err
 	}
-	//fmt.Printf("BaseURL: %#v\n", c.BaseURL)
 	u := c.BaseURL.ResolveReference(rel)
-	// u, err := url.Parse(c.BaseURL)
-	// if err != nil {
-	//    return nil,err
-	// }
-	//
-	// c.BaseURL = u
 	u.Path = path.Join(c.BaseURL.Path, rel.Path)
 
 	fmt.Printf("u: %#v\n", u)
@@ -300,7 +244,7 @@ func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}, content
 	if body != nil {
 		switch body.(type) {
 		default:
-			ctype = appJson
+			ctype = appJSON
 			buf := new(bytes.Buffer)
 			err := json.NewEncoder(buf).Encode(body)
 			if err != nil {
@@ -325,11 +269,14 @@ func (c *EdgeClient) NewRequest(method, urlStr string, body interface{}, content
 		if ctype != "" {
 			req.Header.Add("Content-Type", ctype)
 		}
-		req.Header.Add("Accept", appJson)
+		req.Header.Add("Accept", appJSON)
 		req.Header.Add("User-Agent", c.UserAgent)
 	}
-
-	req.SetBasicAuth(c.auth.Username, c.auth.Password)
+	if c.auth.AccessToken != "" {
+		req.Header.Add("Authorization", "Bearer "+c.auth.AccessToken)
+	} else {
+		req.SetBasicAuth(c.auth.Username, c.auth.Password)
+	}
 	return req, nil
 }
 
@@ -401,10 +348,6 @@ func (c *EdgeClient) Do(req *http.Request, v interface{}) (*Response, error) {
 }
 
 func (r *ErrorResponse) Error() string {
-	// if r.RequestID != "" {
-	//   return fmt.Sprintf("%v %v: %d (request %q) %v",
-	//     r.Response.Request.Method, r.Response.Request.URL, r.Response.StatusCode, r.RequestID, r.Message)
-	// }
 	return fmt.Sprintf("%v %v: %d %v",
 		r.Response.Request.Method, r.Response.Request.URL, r.Response.StatusCode, r.Message)
 }
