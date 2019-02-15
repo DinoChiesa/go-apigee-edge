@@ -22,7 +22,7 @@ type SharedFlowService interface {
 	Get(string) (*SharedFlow, *Response, error)
 	Deploy(string, string, Revision, int, bool) (*SharedFlowRevisionDeployment, *Response, error)
 	Import(string, string) (*SharedFlowRevision, *Response, error)
-	Delete(string) (*DeletedProxyInfo, *Response, error)
+	Delete(string) (*DeletedSharedFlowInfo, *Response, error)
 }
 
 // SharedFlowRevision holds information about a revision of an API Proxy.
@@ -160,8 +160,8 @@ func (s *SharedFlowServiceOp) Import(name string, source string) (*SharedFlowRev
 		}
 		log.Printf("[INFO] *** Import *** tempDir: %#v\n", tempDir)
 		log.Printf("[INFO] *** Import *** sourceDir: %#v\n", source)
-		zipfileName = path.Join(tempDir, "apiproxy.zip")
-		err = zipDirectory(path.Join(source, "apiproxy"), zipfileName, smartFilter)
+		zipfileName = path.Join(tempDir, "sharedflow.zip")
+		err = zipDirectory(path.Join(source, "sharedflowbundle"), zipfileName, smartFilter)
 		if err != nil {
 			return nil, nil, fmt.Errorf("while creating temp dir, error: %#v", err)
 		}
@@ -193,9 +193,9 @@ func (s *SharedFlowServiceOp) Import(name string, source string) (*SharedFlowRev
 	}
 	defer ioreader.Close()
 
-	req, e := s.client.NewRequest("POST", path, ioreader, "")
-	if e != nil {
-		return nil, nil, e
+	req, err := s.client.NewRequest("POST", path, ioreader, "")
+	if err != nil {
+		return nil, nil, err
 	}
 	sharedFlowRevision := SharedFlowRevision{}
 	resp, err := s.client.Do(req, &sharedFlowRevision)
@@ -209,7 +209,7 @@ func (s *SharedFlowServiceOp) Import(name string, source string) (*SharedFlowRev
 // will fail if any of the revisions of the named API Proxy are currently deployed
 // in any environment.
 func (s *SharedFlowServiceOp) Delete(name string) (*DeletedSharedFlowInfo, *Response, error) {
-	path := path.Join(proxiesPath, name)
+	path := path.Join(sharedFlows, name)
 	req, e := s.client.NewRequest("DELETE", path, nil, "")
 	if e != nil {
 		return nil, nil, e
