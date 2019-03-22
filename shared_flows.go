@@ -28,7 +28,7 @@ type SharedFlowService interface {
 	Undeploy(string, string, Revision) (*SharedFlowRevisionDeployment, *Response, error)
 }
 
-// SharedFlowRevision holds information about a revision of an API Proxy.
+// SharedFlowRevision holds information about a revision of a shared flow.
 type SharedFlowRevision struct {
 	CreatedBy       string    `json:"createdBy,omitempty"`
 	CreatedAt       Timestamp `json:"createdAt,omitempty"`
@@ -57,7 +57,7 @@ type SharedFlow struct {
 }
 
 // SharedFlowMetadata contains information related to the creation and last modified
-// time and actor for an API Proxy within an organization.
+// time and actor for a shared flow within an organization.
 type SharedFlowMetadata struct {
 	LastModifiedBy string    `json:"lastModifiedBy,omitempty"`
 	CreatedBy      string    `json:"createdBy,omitempty"`
@@ -79,7 +79,7 @@ type SharedFlowRevisionDeployment struct {
 // SharedFlowRevisionDeployments holds information about the deployment state of a
 // single revision of a shared flow across environments
 type SharedFlowRevisionDeployments struct {
-	Name         string                         `json:"aPIProxy,omitempty"`
+	Name         string                         `json:"name,omitempty"`
 	Environments []SharedFlowRevisionDeployment `json:"environment,omitempty"`
 	Organization string                         `json:"organization,omitempty"`
 }
@@ -152,11 +152,11 @@ func (s *SharedFlowServiceOp) Deploy(name, env string, rev Revision, delay int, 
 	return &deployment, resp, e
 }
 
-// Import an SharedFlow into an organization, creating a new API Proxy revision.
-// The proxyName can be passed as "nil" in which case the name is derived from the source.
-// The source can be either a filesystem directory containing an exploded apiproxy bundle, OR
-// the path of a zip file containing an SharedFlow bundle. Returns the API proxy revision information.
-// This method does not deploy the imported proxy. See the Deploy method.
+// Import an SharedFlow into an organization, creating a new shared flow revision.
+// The sharedflow can be passed as "nil" in which case the name is derived from the source.
+// The source can be either a filesystem directory containing an exploded shared flow bundle, OR
+// the path of a zip file containing an SharedFlow bundle. Returns the shared flow revision information.
+// This method does not deploy the imported shared flow. See the Deploy method.
 func (s *SharedFlowServiceOp) Import(name string, source string) (*SharedFlowRevision, *Response, error) {
 	info, err := os.Stat(source)
 	if err != nil {
@@ -171,7 +171,7 @@ func (s *SharedFlowServiceOp) Import(name string, source string) (*SharedFlowRev
 		if name == "" {
 			name = filepath.Base(source)
 		}
-		log.Printf("[INFO] *** Import *** proxyName: %#v\n", name)
+		log.Printf("[INFO] *** Import *** sharedFlowName: %#v\n", name)
 		tempDir, err := ioutil.TempDir("", "go-apigee-edge-")
 		if err != nil {
 			log.Printf("[ERROR] *** Import *** error: %#v\n", err)
@@ -225,7 +225,7 @@ func (s *SharedFlowServiceOp) Import(name string, source string) (*SharedFlowRev
 }
 
 // Delete an SharedFlow and all its revisions from an organization. This method
-// will fail if any of the revisions of the named API Proxy are currently deployed
+// will fail if any of the revisions of the named shared flow are currently deployed
 // in any environment.
 func (s *SharedFlowServiceOp) Delete(name string) (*DeletedSharedFlowInfo, *Response, error) {
 	path := path.Join(sharedFlows, name)
