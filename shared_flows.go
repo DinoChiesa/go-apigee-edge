@@ -24,6 +24,8 @@ type SharedFlowService interface {
 	Import(string, string) (*SharedFlowRevision, *Response, error)
 	Delete(string) (*DeletedSharedFlowInfo, *Response, error)
 	GetDeployments(string) (*SharedFlowDeployment, *Response, error)
+	ReDeploy(string, string, Revision, int, bool) (*SharedFlowRevisionDeployments, *Response, error)
+	Undeploy(string, string, Revision) (*SharedFlowRevisionDeployment, *Response, error)
 }
 
 // SharedFlowRevision holds information about a revision of an API Proxy.
@@ -255,7 +257,6 @@ func (s *SharedFlowServiceOp) GetDeployments(name string) (*SharedFlowDeployment
 	return &deployments, resp, e
 }
 
-//isn't is nice that the return data structure changes on the second revision deployment?! NO!
 func (s *SharedFlowServiceOp) ReDeploy(sharedFlowName, env string, rev Revision, delay int, override bool) (*SharedFlowRevisionDeployments, *Response, error) {
 
 	req, e := prepareDeployRequest(sharedFlowName, env, sharedFlows, rev, delay, override, s.client)
@@ -265,4 +266,31 @@ func (s *SharedFlowServiceOp) ReDeploy(sharedFlowName, env string, rev Revision,
 
 	return &deployment, resp, e
 
+}
+
+// Undeploy a specific revision of a shared flow from a particular environment within an Edge organization.
+func (s *SharedFlowServiceOp) Undeploy(sharedFlowName, env string, rev Revision) (*SharedFlowRevisionDeployment, *Response, error) {
+	path := path.Join(sharedFlows, sharedFlowName, "revisions", fmt.Sprintf("%d", rev), "deployments")
+	// append the query params
+	origURL, err := url.Parse(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	q := origURL.Query()
+	q.Add("action", "undeploy")
+	q.Add("env", env)
+	origURL.RawQuery = q.Encode()
+	path = origURL.String()
+
+	req, e := s.client.NewRequest("POST", path, nil, "")
+	if e != nil {
+		return nil, nil, e
+	}
+
+	deployment := SharedFlowRevisionDeployment{}
+	resp, e := s.client.Do(req, &deployment)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &deployment, resp, e
 }
