@@ -23,9 +23,12 @@ type SharedFlowService interface {
 	Deploy(string, string, Revision, int, bool) (*SharedFlowRevisionDeployment, *Response, error)
 	Import(string, string) (*SharedFlowRevision, *Response, error)
 	Delete(string) (*DeletedSharedFlowInfo, *Response, error)
+	GetDeployments(string) (*SharedFlowDeployment, *Response, error)
+	ReDeploy(string, string, Revision, int, bool) (*SharedFlowRevisionDeployments, *Response, error)
+	Undeploy(string, string, Revision) (*SharedFlowRevisionDeployment, *Response, error)
 }
 
-// SharedFlowRevision holds information about a revision of an API Proxy.
+// SharedFlowRevision holds information about a revision of a shared flow.
 type SharedFlowRevision struct {
 	CreatedBy       string    `json:"createdBy,omitempty"`
 	CreatedAt       Timestamp `json:"createdAt,omitempty"`
@@ -54,7 +57,7 @@ type SharedFlow struct {
 }
 
 // SharedFlowMetadata contains information related to the creation and last modified
-// time and actor for an API Proxy within an organization.
+// time and actor for a shared flow within an organization.
 type SharedFlowMetadata struct {
 	LastModifiedBy string    `json:"lastModifiedBy,omitempty"`
 	CreatedBy      string    `json:"createdBy,omitempty"`
@@ -63,7 +66,7 @@ type SharedFlowMetadata struct {
 }
 
 // SharedFlowRevisionDeployment holds information about the deployment state of a
-// single revision of an API Proxy.
+// single revision of a shared flow.
 type SharedFlowRevisionDeployment struct {
 	Name         string       `json:",omitempty"`
 	Revision     Revision     `json:"revision,omitempty"`
@@ -71,6 +74,22 @@ type SharedFlowRevisionDeployment struct {
 	Organization string       `json:"organization,omitempty"`
 	State        string       `json:"state,omitempty"`
 	Servers      []EdgeServer `json:"server,omitempty"`
+}
+
+// SharedFlowRevisionDeployments holds information about the deployment state of a
+// single revision of a shared flow across environments
+type SharedFlowRevisionDeployments struct {
+	Name         string                         `json:"name,omitempty"`
+	Environments []SharedFlowRevisionDeployment `json:"environment,omitempty"`
+	Organization string                         `json:"organization,omitempty"`
+}
+
+// SharedFlowDeployment holds information about the deployment state of
+// all revisions of a shared flow
+type SharedFlowDeployment struct {
+	Environments []EnvironmentDeployment `json:"environment,omitempty"`
+	Name         string                  `json:"name,omitempty"`
+	Organization string                  `json:"organization,omitempty"`
 }
 
 // DeletedSharedFlowInfo is a  payload that contains very little useful
@@ -133,11 +152,11 @@ func (s *SharedFlowServiceOp) Deploy(name, env string, rev Revision, delay int, 
 	return &deployment, resp, e
 }
 
-// Import an SharedFlow into an organization, creating a new API Proxy revision.
-// The proxyName can be passed as "nil" in which case the name is derived from the source.
-// The source can be either a filesystem directory containing an exploded apiproxy bundle, OR
-// the path of a zip file containing an SharedFlow bundle. Returns the API proxy revision information.
-// This method does not deploy the imported proxy. See the Deploy method.
+// Import an SharedFlow into an organization, creating a new shared flow revision.
+// The sharedflow can be passed as "nil" in which case the name is derived from the source.
+// The source can be either a filesystem directory containing an exploded shared flow bundle, OR
+// the path of a zip file containing an SharedFlow bundle. Returns the shared flow revision information.
+// This method does not deploy the imported shared flow. See the Deploy method.
 func (s *SharedFlowServiceOp) Import(name string, source string) (*SharedFlowRevision, *Response, error) {
 	info, err := os.Stat(source)
 	if err != nil {
@@ -152,7 +171,7 @@ func (s *SharedFlowServiceOp) Import(name string, source string) (*SharedFlowRev
 		if name == "" {
 			name = filepath.Base(source)
 		}
-		log.Printf("[INFO] *** Import *** proxyName: %#v\n", name)
+		log.Printf("[INFO] *** Import *** sharedFlowName: %#v\n", name)
 		tempDir, err := ioutil.TempDir("", "go-apigee-edge-")
 		if err != nil {
 			log.Printf("[ERROR] *** Import *** error: %#v\n", err)
@@ -206,7 +225,7 @@ func (s *SharedFlowServiceOp) Import(name string, source string) (*SharedFlowRev
 }
 
 // Delete an SharedFlow and all its revisions from an organization. This method
-// will fail if any of the revisions of the named API Proxy are currently deployed
+// will fail if any of the revisions of the named shared flow are currently deployed
 // in any environment.
 func (s *SharedFlowServiceOp) Delete(name string) (*DeletedSharedFlowInfo, *Response, error) {
 	path := path.Join(sharedFlows, name)
@@ -220,4 +239,58 @@ func (s *SharedFlowServiceOp) Delete(name string) (*DeletedSharedFlowInfo, *Resp
 		return nil, resp, err
 	}
 	return &sharedFlow, resp, err
+}
+
+// GetDeployments retrieves the information about deployments of a shared flow in
+// an organization, including the environment names and revision numbers.
+func (s *SharedFlowServiceOp) GetDeployments(name string) (*SharedFlowDeployment, *Response, error) {
+	path := path.Join(sharedFlows, name, "deployments")
+	req, e := s.client.NewRequest("GET", path, nil, "")
+	if e != nil {
+		return nil, nil, e
+	}
+	deployments := SharedFlowDeployment{}
+	resp, e := s.client.Do(req, &deployments)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &deployments, resp, e
+}
+
+func (s *SharedFlowServiceOp) ReDeploy(sharedFlowName, env string, rev Revision, delay int, override bool) (*SharedFlowRevisionDeployments, *Response, error) {
+
+	req, e := prepareDeployRequest(sharedFlowName, env, sharedFlows, rev, delay, override, s.client)
+
+	deployment := SharedFlowRevisionDeployments{}
+	resp, e := s.client.Do(req, &deployment)
+
+	return &deployment, resp, e
+
+}
+
+// Undeploy a specific revision of a shared flow from a particular environment within an Edge organization.
+func (s *SharedFlowServiceOp) Undeploy(sharedFlowName, env string, rev Revision) (*SharedFlowRevisionDeployment, *Response, error) {
+	path := path.Join(sharedFlows, sharedFlowName, "revisions", fmt.Sprintf("%d", rev), "deployments")
+	// append the query params
+	origURL, err := url.Parse(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	q := origURL.Query()
+	q.Add("action", "undeploy")
+	q.Add("env", env)
+	origURL.RawQuery = q.Encode()
+	path = origURL.String()
+
+	req, e := s.client.NewRequest("POST", path, nil, "")
+	if e != nil {
+		return nil, nil, e
+	}
+
+	deployment := SharedFlowRevisionDeployment{}
+	resp, e := s.client.Do(req, &deployment)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &deployment, resp, e
 }
