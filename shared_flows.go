@@ -23,6 +23,7 @@ type SharedFlowService interface {
 	Deploy(string, string, Revision, int, bool) (*SharedFlowRevisionDeployment, *Response, error)
 	Import(string, string) (*SharedFlowRevision, *Response, error)
 	Delete(string) (*DeletedSharedFlowInfo, *Response, error)
+	GetDeployments(string) (*SharedFlowDeployment, *Response, error)
 }
 
 // SharedFlowRevision holds information about a revision of an API Proxy.
@@ -63,7 +64,7 @@ type SharedFlowMetadata struct {
 }
 
 // SharedFlowRevisionDeployment holds information about the deployment state of a
-// single revision of an API Proxy.
+// single revision of a shared flow.
 type SharedFlowRevisionDeployment struct {
 	Name         string       `json:",omitempty"`
 	Revision     Revision     `json:"revision,omitempty"`
@@ -71,6 +72,22 @@ type SharedFlowRevisionDeployment struct {
 	Organization string       `json:"organization,omitempty"`
 	State        string       `json:"state,omitempty"`
 	Servers      []EdgeServer `json:"server,omitempty"`
+}
+
+// SharedFlowRevisionDeployments holds information about the deployment state of a
+// single revision of a shared flow across environments
+type SharedFlowRevisionDeployments struct {
+	Name         string                         `json:"aPIProxy,omitempty"`
+	Environments []SharedFlowRevisionDeployment `json:"environment,omitempty"`
+	Organization string                         `json:"organization,omitempty"`
+}
+
+// SharedFlowDeployment holds information about the deployment state of
+// all revisions of a shared flow
+type SharedFlowDeployment struct {
+	Environments []EnvironmentDeployment `json:"environment,omitempty"`
+	Name         string                  `json:"name,omitempty"`
+	Organization string                  `json:"organization,omitempty"`
 }
 
 // DeletedSharedFlowInfo is a  payload that contains very little useful
@@ -220,4 +237,32 @@ func (s *SharedFlowServiceOp) Delete(name string) (*DeletedSharedFlowInfo, *Resp
 		return nil, resp, err
 	}
 	return &sharedFlow, resp, err
+}
+
+// GetDeployments retrieves the information about deployments of a shared flow in
+// an organization, including the environment names and revision numbers.
+func (s *SharedFlowServiceOp) GetDeployments(name string) (*SharedFlowDeployment, *Response, error) {
+	path := path.Join(sharedFlows, name, "deployments")
+	req, e := s.client.NewRequest("GET", path, nil, "")
+	if e != nil {
+		return nil, nil, e
+	}
+	deployments := SharedFlowDeployment{}
+	resp, e := s.client.Do(req, &deployments)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &deployments, resp, e
+}
+
+//isn't is nice that the return data structure changes on the second revision deployment?! NO!
+func (s *SharedFlowServiceOp) ReDeploy(sharedFlowName, env string, rev Revision, delay int, override bool) (*SharedFlowRevisionDeployments, *Response, error) {
+
+	req, e := prepareDeployRequest(sharedFlowName, env, sharedFlows, rev, delay, override, s.client)
+
+	deployment := SharedFlowRevisionDeployments{}
+	resp, e := s.client.Do(req, &deployment)
+
+	return &deployment, resp, e
+
 }

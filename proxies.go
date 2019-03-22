@@ -402,7 +402,7 @@ func (s *ProxiesServiceOp) Undeploy(proxyName, env string, rev Revision) (*Proxy
 // Deploy a revision of an API proxy to a specific environment within an organization.
 func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision, delay int, override bool) (*ProxyRevisionDeployment, *Response, error) {
 
-	req, e := prepareDeployRequest(proxyName, env, rev, delay, override, s)
+	req, e := prepareDeployRequest(proxyName, env, proxiesPath, rev, delay, override, s.client)
 
 	deployment := ProxyRevisionDeployment{}
 	resp, e := s.client.Do(req, &deployment)
@@ -414,7 +414,7 @@ func (s *ProxiesServiceOp) Deploy(proxyName, env string, rev Revision, delay int
 //isn't is nice that the return data structure changes on the second revision deployment?! NO!
 func (s *ProxiesServiceOp) ReDeploy(proxyName, env string, rev Revision, delay int, override bool) (*ProxyRevisionDeployments, *Response, error) {
 
-	req, e := prepareDeployRequest(proxyName, env, rev, delay, override, s)
+	req, e := prepareDeployRequest(proxyName, env, proxiesPath, rev, delay, override, s.client)
 
 	deployment := ProxyRevisionDeployments{}
 	resp, e := s.client.Do(req, &deployment)
@@ -423,9 +423,9 @@ func (s *ProxiesServiceOp) ReDeploy(proxyName, env string, rev Revision, delay i
 
 }
 
-func prepareDeployRequest(proxyName, env string, rev Revision, delay int, override bool, s *ProxiesServiceOp) (*http.Request, error) {
+func prepareDeployRequest(name, env, resourcePath string, rev Revision, delay int, override bool, c *EdgeClient) (*http.Request, error) {
 
-	path := path.Join("environments", env, proxiesPath, proxyName, "revisions", fmt.Sprintf("%d", rev), "deployments")
+	path := path.Join("environments", env, resourcePath, name, "revisions", fmt.Sprintf("%d", rev), "deployments")
 	// append the query params
 	origURL, err := url.Parse(path)
 	if err != nil {
@@ -437,7 +437,7 @@ func prepareDeployRequest(proxyName, env string, rev Revision, delay int, overri
 	origURL.RawQuery = q.Encode()
 	path = origURL.String()
 
-	req, e := s.client.NewRequest("POST", path, nil, "application/x-www-form-urlencoded")
+	req, e := c.NewRequest("POST", path, nil, "application/x-www-form-urlencoded")
 	if e != nil {
 		return nil, e
 	}
