@@ -270,19 +270,16 @@ func (s *SharedFlowServiceOp) ReDeploy(sharedFlowName, env string, rev Revision,
 
 // Undeploy a specific revision of a shared flow from a particular environment within an Edge organization.
 func (s *SharedFlowServiceOp) Undeploy(sharedFlowName, env string, rev Revision) (*SharedFlowRevisionDeployment, *Response, error) {
-	path := path.Join(sharedFlows, sharedFlowName, "revisions", fmt.Sprintf("%d", rev), "deployments")
+	path := path.Join("environments", env, sharedFlows, sharedFlowName, "revisions", fmt.Sprintf("%d", rev), "deployments")
 	// append the query params
 	origURL, err := url.Parse(path)
 	if err != nil {
 		return nil, nil, err
 	}
-	q := origURL.Query()
-	q.Add("action", "undeploy")
-	q.Add("env", env)
-	origURL.RawQuery = q.Encode()
+
 	path = origURL.String()
 
-	req, e := s.client.NewRequest("POST", path, nil, "")
+	req, e := s.client.NewRequest("DELETE", path, nil, "")
 	if e != nil {
 		return nil, nil, e
 	}
