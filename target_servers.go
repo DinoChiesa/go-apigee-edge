@@ -20,11 +20,11 @@ type TargetServersServiceOp struct {
 var _ TargetServersService = &TargetServersServiceOp{}
 
 type TargetServer struct {
-	Name    string  `json:"name,omitempty"`
-	Host    string  `json:"host,omitempty"`
-	Enabled bool    `json:"isEnabled"`
-	Port    int     `json:"port,omitempty"`
-	SSLInfo SSLInfo `json:"sSLInfo,omitempty"`
+	Name    string   `json:"name,omitempty"`
+	Host    string   `json:"host,omitempty"`
+	Enabled bool     `json:"isEnabled"`
+	Port    int      `json:"port,omitempty"`
+	SSLInfo *SSLInfo `json:"sSLInfo,omitempty"`
 }
 
 // For some reason Apigee returns SOME bools as strings and others a bools.
