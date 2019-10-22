@@ -8,8 +8,8 @@ import (
 
 const developersPath = "developers"
 
-// ProductsService is an interface for interfacing with the Apigee Edge Admin API
-// dealing with apiproducts.
+// DevelopersService is an interface for interfacing with the Apigee Edge Admin API
+// dealing with developers.
 type DevelopersService interface {
   List() ([]string, *Response, error)
   Get(string) (*Developer, *Response, error)
