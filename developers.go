@@ -13,11 +13,13 @@ const developersPath = "developers"
 type DevelopersService interface {
   List() ([]string, *Response, error)
   Get(string) (*Developer, *Response, error)
+  //GetApps(string) (*Developer, *Response, error)
   Create(Developer) (*Developer, *Response, error)
   Update(Developer) (*Developer, *Response, error)
   Delete(string) (*Developer, *Response, error)
   Revoke(string) (*Response, error)
   Approve(string) (*Response, error)
+  Apps(string) (DeveloperAppsService)
 }
 
 type DevelopersServiceOp struct {
@@ -39,22 +41,6 @@ type Developer struct {
   Id               string      `json:"uuid,omitempty"`
   Apps             []string    `json:"apps,omitempty"`
 }
-
-type DeveloperApp struct {
-  Name         string      `json:"name,omitempty"`
-	AccessType   string 	   `json:"accessType,omitempty"`
-  Attributes   Attributes  `json:"attributes,omitempty"`
-  ApiProducts  []string    `json:"apiProducts,omitempty"`
-}
-
-type DeveloperAppCreationRequest struct {
-  Name         string      `json:"name,omitempty"`
-	AccessType   string 	   `json:"accessType,omitempty"`
-  Attributes   Attributes  `json:"attributes,omitempty"`
-  ApiProducts  []string    `json:"apiProducts,omitempty"`
-  KeyExpiry    string      `json:"keyExpiresIn,omitempty"`
-}
-
 
 func (s *DevelopersServiceOp) Update(dev Developer) (*Developer, *Response, error) {
 	if dev.Email == "" && dev.Id == "" {
@@ -143,9 +129,9 @@ func updateDeveloperStatus (s DevelopersServiceOp, developerEmailOrId string, de
   devPath := path.Join(developersPath, developerEmailOrId)
 
   // append the necessary query param
-  origURL, err := url.Parse(devPath)
-  if err != nil {
-     return nil, err
+  origURL, e := url.Parse(devPath)
+  if e != nil {
+     return nil, e
   }
   q := origURL.Query()
   q.Add("action", desiredStatus)
@@ -171,16 +157,21 @@ func (s *DevelopersServiceOp) Approve(developerEmailOrId string) (*Response, err
 	return updateDeveloperStatus(*s, developerEmailOrId, "active")
 }
 
-func (s *DevelopersServiceOp) GetApps(developerEmailOrId string) ([]DeveloperApp, *Response, error) {
-  appsPath := path.Join(developersPath, developerEmailOrId, "apps") + "?expand=true"
-  req, e := s.client.NewRequest("GET", appsPath, nil)
-  if e != nil {
-    return nil, nil, e
-  }
-  apps := make([]DeveloperApp,0)
-  resp, e := s.client.Do(req, &apps)
-  if e != nil {
-    return nil, resp, e
-  }
-  return apps, resp, e
+// func (s *DevelopersServiceOp) GetApps(developerEmailOrId string) ([]DeveloperApp, *Response, error) {
+//   appsPath := path.Join(developersPath, developerEmailOrId, "apps") + "?expand=true"
+//   req, e := s.client.NewRequest("GET", appsPath, nil)
+//   if e != nil {
+//     return nil, nil, e
+//   }
+//   apps := make([]DeveloperApp,0)
+//   resp, e := s.client.Do(req, &apps)
+//   if e != nil {
+//     return nil, resp, e
+//   }
+//   return apps, resp, e
+// }
+
+func (s *DevelopersServiceOp) Apps(developerEmailOrId string) DeveloperAppsService {
+	devapps := &DeveloperAppsServiceOp{client: s.client, developerId: developerEmailOrId}
+	return devapps
 }

@@ -31,7 +31,7 @@ func randomDeveloperFromTemplate() (Developer, error) {
 		return got, e
 	}
 	// assign values
-	tag := randomString(14)
+	tag := pretag + randomString(6)
 	got.Email = tag + got.Email
 	got.UserName = tag + "-" + got.UserName 
 	got.FirstName = got.FirstName + "-" + tag
@@ -40,7 +40,6 @@ func randomDeveloperFromTemplate() (Developer, error) {
 
 
 func TestDeveloperCreateDelete(t *testing.T) {
-  orgName := "cap500"
   opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
   client, e := NewEdgeClient(opts)
   if e != nil {
@@ -70,7 +69,6 @@ func TestDeveloperCreateDelete(t *testing.T) {
 
 
 func TestDeveloperList(t *testing.T) {
-  orgName := "cap500"
   opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
   client, e := NewEdgeClient(opts)
   if e != nil {
@@ -87,7 +85,6 @@ func TestDeveloperList(t *testing.T) {
 }
 
 func TestDeveloperGet(t *testing.T) {
-  orgName := "cap500"
   opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
   client, e := NewEdgeClient(opts)
   if e != nil {
@@ -115,7 +112,6 @@ func TestDeveloperGet(t *testing.T) {
 
 
 func TestDeveloperUpdate(t *testing.T) {
-  orgName := "cap500"
   opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
   client, e := NewEdgeClient(opts)
   if e != nil {

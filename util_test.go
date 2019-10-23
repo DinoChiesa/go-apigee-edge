@@ -8,6 +8,8 @@ import (
 
 const (
 	letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	pretag = "go-test-"
+	orgName = "gaccelerate3"
 )
 
 func wait(delay int) {  

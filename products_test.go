@@ -25,7 +25,7 @@ const (
 }`
 )
 
-func randomProductFromTemplate() (ApiProduct, error) {
+func randomProductFromTemplate(proxyname string) (ApiProduct, error) {
 	got := ApiProduct{}
 	e := json.Unmarshal([]byte(productJson1), &got)
 	
@@ -33,8 +33,9 @@ func randomProductFromTemplate() (ApiProduct, error) {
 		return got, e
 	}
 	// assign values
-	tag := randomString(14)
+	tag := pretag + randomString(7)
 	got.Name = tag + "-" + got.Name
+	got.Proxies = []string{proxyname}
 	got.DisplayName = tag + "-" + got.DisplayName 
 	got.Description = tag + " " + randomString(8) + " " + randomString(18)
   got.Scopes = []string { randomString(1), randomString(2), }
@@ -43,18 +44,27 @@ func randomProductFromTemplate() (ApiProduct, error) {
 
 
 func TestProductCreateDelete(t *testing.T) {
-  orgName := "cap500"
   opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
   client, e := NewEdgeClient(opts)
   if e != nil {
-		t.Errorf("while initializing Edge client, error:\n%#v\n", e)
+		t.Errorf("while initializing Apigee client, error:\n%#v\n", e)
     return
   }
 
-	product, e := randomProductFromTemplate()
+  namelist, resp, e := client.Proxies.List()
+  if e != nil {
+		t.Errorf("while listing proxies, error:\n%#v\n", e)
+    return
+  }
+  if len(namelist) <= 0 {
+		t.Errorf("no proxies found")
+    return
+  }
+	
+	product, e := randomProductFromTemplate(namelist[0])
   createdProduct, resp, e := client.Products.Create(product)
   if e != nil {
-		t.Errorf("while creating Edge product, error:\n%#v\n", e)
+		t.Errorf("while creating Apigee product, error:\n%#v\n", e)
     return
   }
 	t.Logf("Create: got=%v", createdProduct)
@@ -64,7 +74,7 @@ func TestProductCreateDelete(t *testing.T) {
 
   deletedProduct, resp, e := client.Products.Delete(createdProduct.Name)
   if e != nil {
-		t.Errorf("while deleting Edge product, error:\n%#v\n", e)
+		t.Errorf("while deleting Apigee product, error:\n%#v\n", e)
     return
   }
 	t.Logf("Delete: got=%v", deletedProduct)
