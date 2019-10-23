@@ -261,6 +261,13 @@ func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevisi
       return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
     }
     fmt.Printf("zipped %s into %s\n\n", source, zipfileName)
+		cleanup := func(filename string) {
+			_ = os.Remove(filename)
+			// if e != nil {
+			// 	//.. 
+			// }
+		}
+		defer cleanup(zipfileName)
   }
 
   if !strings.HasSuffix(zipfileName,".zip") {
