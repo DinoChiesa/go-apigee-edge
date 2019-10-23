@@ -12,6 +12,10 @@ const (
 	orgName = "gaccelerate3"
 )
 
+func init() {
+	rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
+}
+
 func wait(delay int) {  
   fmt.Printf("Waiting %ds...\n", delay)
   time.Sleep(time.Duration(delay)*time.Second)

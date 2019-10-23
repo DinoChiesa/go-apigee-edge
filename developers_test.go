@@ -4,7 +4,6 @@ import (
   "encoding/json"
   "testing"
 	"math/rand"
-	"time"
 )
 
 const (
@@ -98,7 +97,6 @@ func TestDeveloperGet(t *testing.T) {
     return
   }
 
-	rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
 	selectedDevEmail := developerList[rand.Intn(len(developerList))]
 
 	developerDetails, _, e := client.Developers.Get(selectedDevEmail)
@@ -126,7 +124,15 @@ func TestDeveloperUpdate(t *testing.T) {
     return
   }
 	t.Logf("Create: got=%+v", createdDeveloper)
-	
+	teardown := func(t *testing.T) {
+		deletedDeveloper, _, e := client.Developers.Delete(createdDeveloper.Email)
+		if e != nil {
+			t.Errorf("while deleting Edge developer, error:\n%#v\n", e)
+			return
+		}
+		t.Logf("Delete: got=%v", deletedDeveloper)
+	}
+	defer teardown(t)
   wait(1)
 
 	_, e = client.Developers.Revoke(createdDeveloper.Email)
@@ -134,7 +140,7 @@ func TestDeveloperUpdate(t *testing.T) {
 		t.Errorf("while revoking Edge developer, error:\n%#v\n", e)
     return
   }
-	
+	t.Logf("Revoke")
   wait(1)
 
 	_, e = client.Developers.Approve(createdDeveloper.Email)
@@ -142,12 +148,7 @@ func TestDeveloperUpdate(t *testing.T) {
 		t.Errorf("while approving Edge developer, error:\n%#v\n", e)
     return
   }
-	
+	t.Logf("Approve")
   wait(1)
-  deletedDeveloper, _, e := client.Developers.Delete(createdDeveloper.Email)
-  if e != nil {
-		t.Errorf("while deleting Edge developer, error:\n%#v\n", e)
-    return
-  }
-	t.Logf("Delete: got=%v", deletedDeveloper)
+	
 }

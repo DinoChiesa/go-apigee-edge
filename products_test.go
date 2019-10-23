@@ -3,6 +3,7 @@ package apigee
 import (
   "encoding/json"
   "testing"
+	"math/rand"
 )
 
 const (
@@ -60,8 +61,10 @@ func TestProductCreateDelete(t *testing.T) {
 		t.Errorf("no proxies found")
     return
   }
+
+	selectedProxy := namelist[rand.Intn(len(namelist))]
 	
-	product, e := randomProductFromTemplate(namelist[0])
+	product, e := randomProductFromTemplate(selectedProxy)
   createdProduct, resp, e := client.Products.Create(product)
   if e != nil {
 		t.Errorf("while creating Apigee product, error:\n%#v\n", e)

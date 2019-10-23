@@ -46,11 +46,24 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
   }
 	t.Logf("Create: got=%+v", createdDeveloper)
 	t.Logf("resp: got=%+v", resp)
-	
+
+	teardown := func(t *testing.T) {
+		t.Logf("remove developer")
+		deletedDeveloper, _, e := client.Developers.Delete(createdDeveloper.Email)
+		if e != nil {
+			t.Errorf("while deleting Edge developer, error:\n%#v\n", e)
+			return
+		}
+		t.Logf("Delete: got=%v", deletedDeveloper)
+	}
+
+	defer teardown(t)
   wait(1)
 
+	
 	devapps := client.Developers.Apps(createdDeveloper.Email)
 	devapp, e := randomAppFromTemplate()
+
 	
   createdApp, resp, e := devapps.Create(devapp)	
   if e != nil {
@@ -60,6 +73,49 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 	t.Logf("CreateApp: got=%v", createdApp)
 	
   wait(1)
+
+  resp, e = devapps.Revoke(createdApp.Name)	
+  if e != nil {
+		t.Errorf("while revoking developer app, error:\n%#v\n", e)
+    return
+  }
+	t.Logf("RevokeApp")
+	wait(1)
+	
+  got, resp, e := devapps.Get(createdApp.Name)	
+  if e != nil {
+		t.Errorf("while getting developer app, error:\n%#v\n", e)
+    return
+  }
+	if (got.Name != createdApp.Name) {
+		t.Errorf("inconsistent name")
+	}
+	if (got.Status != "revoked") {
+		t.Errorf("inconsistent status")
+	}
+	t.Logf("GetApp")
+	
+  resp, e = devapps.Approve(createdApp.Name)	
+  if e != nil {
+		t.Errorf("while approving developer app, error:\n%#v\n", e)
+    return
+  }
+	t.Logf("ApproveApp")
+
+	wait(1)
+
+	got, resp, e = devapps.Get(createdApp.Name)	
+  if e != nil {
+		t.Errorf("while getting developer app, error:\n%#v\n", e)
+    return
+  }
+	if (got.Name != createdApp.Name) {
+		t.Errorf("inconsistent name")
+	}
+	if (got.Status != "approved") {
+		t.Errorf("inconsistent status")
+	}
+	t.Logf("GetApp")
 	
   deletedApp, resp, e := devapps.Delete(createdApp.Name)	
   if e != nil {
@@ -69,13 +125,6 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 	t.Logf("DeleteApp: got=%v", deletedApp)
 
   wait(1)
-	
-  deletedDeveloper, resp, e := client.Developers.Delete(createdDeveloper.Email)
-  if e != nil {
-		t.Errorf("while deleting Edge developer, error:\n%#v\n", e)
-    return
-  }
-	t.Logf("Delete: got=%v", deletedDeveloper)
 	
 }
 

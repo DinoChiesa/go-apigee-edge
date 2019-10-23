@@ -13,7 +13,6 @@ const developersPath = "developers"
 type DevelopersService interface {
   List() ([]string, *Response, error)
   Get(string) (*Developer, *Response, error)
-  //GetApps(string) (*Developer, *Response, error)
   Create(Developer) (*Developer, *Response, error)
   Update(Developer) (*Developer, *Response, error)
   Delete(string) (*Developer, *Response, error)
