@@ -36,11 +36,11 @@ These items may be added later as need and demand warrants.
 ## This is not an official Google product
 
 This library and any example tools included here are not an official Google product, nor are they part of an official Google product.
-Support is available on a best-effort basis via github or community.apigee.com .
+Support is available on a best-effort basis via github or [community.apigee.com](https://community.apigee.com) .
 
 ## Copyright and License
 
-This code is [Copyright (c) 2016 Apigee Corp, 2017 Google Inc.](NOTICE). it is licensed under the [Apache 2.0 Source Licese](LICENSE).
+This code is [Copyright (c) 2016 Apigee Corp, 2017-2019 Google LLC](NOTICE). it is licensed under the [Apache 2.0 Source Licese](LICENSE).
 
 
 ## Status
