@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	libraryVersion = "0.1.0"
+	libraryVersion = "0.2.0"
 	defaultBaseURL = "https://api.enterprise.apigee.com/"
 	userAgent      = "go-apigee-edge/" + libraryVersion
 	appJSON        = "application/json"
@@ -59,7 +59,7 @@ type EdgeClient struct {
 	// DropletActions    DropletActionsService
 	// Images            ImagesService
 	// ImageActions      ImageActionsService
-	// Keys              KeysService
+	KeyValueMap KeyValueMapService
 	// Regions           RegionsService
 	// Sizes             SizesService
 	// FloatingIPs       FloatingIPsService
@@ -201,6 +201,7 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient, error) {
 	c.CompanyApps = &CompanyAppServiceOp{client: c}
 	c.DeveloperApps = &DeveloperAppServiceOp{client: c}
 	c.SharedFlows = &SharedFlowServiceOp{client: c}
+	c.KeyValueMap = &KeyValueMapServiceOp{client: c}
 
 	var e error = nil
 	if o.Auth == nil {
