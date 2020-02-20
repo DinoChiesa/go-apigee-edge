@@ -59,7 +59,8 @@ type EdgeClient struct {
 	// DropletActions    DropletActionsService
 	// Images            ImagesService
 	// ImageActions      ImageActionsService
-	KeyValueMap KeyValueMapService
+	KeyValueMap      KeyValueMapService
+	KeyValueMapEntry KeyValueMapEntryService
 	// Regions           RegionsService
 	// Sizes             SizesService
 	// FloatingIPs       FloatingIPsService
@@ -202,6 +203,7 @@ func NewEdgeClient(o *EdgeClientOptions) (*EdgeClient, error) {
 	c.DeveloperApps = &DeveloperAppServiceOp{client: c}
 	c.SharedFlows = &SharedFlowServiceOp{client: c}
 	c.KeyValueMap = &KeyValueMapServiceOp{client: c}
+	c.KeyValueMapEntry = &KeyValueMapEntryServiceOp{client: c}
 
 	var e error = nil
 	if o.Auth == nil {
