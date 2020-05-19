@@ -25,7 +25,7 @@ type ProxiesService interface {
 	List() ([]string, *Response, error)
 	Get(string) (*Proxy, *Response, error)
 	Import(string, string) (*ProxyRevision, *Response, error)
-	Update(string, Revision, string) (*ProxyRevisionUpdate, *Response, error)
+	Update(string, string, string) (*ProxyRevisionUpdate, *Response, error)
 	Delete(string) (*DeletedProxyInfo, *Response, error)
 	DeleteRevision(string, Revision) (*ProxyRevision, *Response, error)
 	Deploy(string, string, Revision, int, bool) (*ProxyRevisionDeployment, *Response, error)
@@ -286,8 +286,8 @@ func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevisi
 // Update an API proxy revision that already exists.
 // The source can be either a filesystem directory containing an exploded apiproxy bundle, OR
 // the path of a zip file containing an API Proxy bundle. Returns the API proxy revision.
-func (s *ProxiesServiceOp) Update(proxyName string, rev Revision, source string) (*ProxyRevisionUpdate, *Response, error) {
-	path := path.Join(proxiesPath, proxyName, "revisions", fmt.Sprintf("%d", rev))
+func (s *ProxiesServiceOp) Update(proxyName string, rev string, source string) (*ProxyRevisionUpdate, *Response, error) {
+	path := path.Join(proxiesPath, proxyName, "revisions", rev)
 
 	ioreader, err := getZip(proxyName, "Update", source)
 	if err != nil {
