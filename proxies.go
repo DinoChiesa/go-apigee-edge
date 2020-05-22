@@ -255,10 +255,16 @@ func zipDirectory(source string, target string, filter func(string) bool) error 
 // the path of a zip file containing an API Proxy bundle. Returns the API proxy revision information.
 // This method does not deploy the imported proxy. See the Deploy method.
 func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevision, *Response, error) {
-	ioreader, err := getZip(proxyName, "Import", source)
+	zipfileName, err := getZip(proxyName, "Import", source)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	ioreader, err := os.Open(*zipfileName)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer ioreader.Close()
 
 	// append the query params
 	origURL, err := url.Parse(proxiesPath)
@@ -287,13 +293,20 @@ func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevisi
 // The source can be either a filesystem directory containing an exploded apiproxy bundle, OR
 // the path of a zip file containing an API Proxy bundle. Returns the API proxy revision.
 func (s *ProxiesServiceOp) Update(proxyName string, rev string, source string) (*ProxyRevisionUpdate, *Response, error) {
-	path := path.Join(proxiesPath, proxyName, "revisions", rev)
-
-	ioreader, err := getZip(proxyName, "Update", source)
+	zipfileName, err := getZip(proxyName, "Update", source)
 	if err != nil {
 		return nil, nil, err
 	}
-	req, e := s.client.NewRequest("POST", path, ioreader, "multipart/form-data")
+
+	ioreader, err := os.Open(*zipfileName)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer ioreader.Close()
+
+	path := path.Join(proxiesPath, proxyName, "revisions", rev)
+
+	req, e := s.client.NewRequest("POST", path, ioreader, "")
 	if e != nil {
 		return nil, nil, e
 	}
@@ -306,7 +319,7 @@ func (s *ProxiesServiceOp) Update(proxyName string, rev string, source string) (
 }
 
 // Checks a source directory and creates a ZIP file.
-func getZip(proxyName string, method string, source string) (*os.File, error) {
+func getZip(proxyName string, method string, source string) (*string, error) {
 	info, err := os.Stat(source)
 	if err != nil {
 		return nil, err
@@ -345,12 +358,7 @@ func getZip(proxyName string, method string, source string) (*os.File, error) {
 		return nil, err
 	}
 
-	ioreader, err := os.Open(zipfileName)
-	if err != nil {
-		return nil, err
-	}
-	defer ioreader.Close()
-	return ioreader, nil
+	return &zipfileName, nil
 }
 
 // Export a revision of an API proxy within an organization, to a filesystem file.
