@@ -7,7 +7,7 @@ import (
   "sort"
 )
 
-// Attributes represents a revision number. Edge returns rev numbers in string form. 
+// Attributes represents a revision number. Edge returns rev numbers in string form.
 // This marshals and unmarshals between that format and int.
 type Attributes map[string]string
 
@@ -41,7 +41,7 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
     holder = append(holder, n)
   }
   j,_ := json.Marshal(holder)
-  
+
   return j, nil
 }
 
@@ -59,7 +59,7 @@ func (attrs *Attributes) UnmarshalJSON(b []byte) error {
           a[name] = val
         }
       }
-    }    
+    }
     *attrs = a
   }
   return nil

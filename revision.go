@@ -6,7 +6,7 @@ import (
   "fmt"
 )
 
-// Revision represents a revision number. Edge returns rev numbers in string form. 
+// Revision represents a revision number. Edge returns rev numbers in string form.
 // This marshals and unmarshals between that format and int.
 type Revision int
 

@@ -14,7 +14,7 @@ type CachesService interface {
 }
 
 type CachesServiceOp struct {
-  client *EdgeClient
+  client *ApigeeClient
 }
 
 var _ CachesService = &CachesServiceOp{}
@@ -34,7 +34,7 @@ type Cache struct {
 }
 
 
-// List retrieves the list of cache names for the organization referred by the EdgeClient,
+// List retrieves the list of cache names for the organization referred by the ApigeeClient,
 // or a set of cache names for a specific environment within an organization.
 func (s *CachesServiceOp) List(env string) ([]string, *Response, error) {
   var p1 string
@@ -76,4 +76,3 @@ func (s *CachesServiceOp) Get(name, env string) (*Cache, *Response, error) {
   }
   return &returnedCache, resp, e
 }
-

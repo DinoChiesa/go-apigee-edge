@@ -14,7 +14,7 @@ type EnvironmentsService interface {
 }
 
 type EnvironmentsServiceOp struct {
-  client *EdgeClient
+  client *ApigeeClient
 }
 
 var _ EnvironmentsService = &EnvironmentsServiceOp{}
@@ -30,7 +30,7 @@ type Environment struct {
 }
 
 
-// List retrieves the list of environment names for the organization referred by the EdgeClient.
+// List retrieves the list of environment names for the organization referred by the ApigeeClient.
 func (s *EnvironmentsServiceOp) List() ([]string, *Response, error) {
   req, e := s.client.NewRequest("GET", environmentsPath, nil)
   if e != nil {
@@ -59,4 +59,3 @@ func (s *EnvironmentsServiceOp) Get(env string) (*Environment, *Response, error)
   }
   return &returnedEnv, resp, e
 }
-

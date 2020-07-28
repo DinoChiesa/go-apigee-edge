@@ -20,7 +20,7 @@ type DeveloperAppsService interface {
 }
 
 type DeveloperAppsServiceOp struct {
-  client *EdgeClient
+  client *ApigeeClient
   developerId string
 }
 
@@ -42,7 +42,7 @@ func (s *DeveloperAppsServiceOp) Create(app DeveloperApp) (*DeveloperApp, *Respo
 	if (app.Name == "") {
 		return nil, nil, errors.New("cannot create a developerapp with no name")
 	}
-	appsPath := path.Join(developersPath, s.developerId, "apps") 
+	appsPath := path.Join(developersPath, s.developerId, "apps")
   req, e := s.client.NewRequest("POST", appsPath, app)
   if e != nil {
     return nil, nil, e
@@ -136,7 +136,7 @@ func (s *DeveloperAppsServiceOp) Update(app DeveloperApp) (*DeveloperApp, *Respo
     return nil, nil, errors.New("missing the Name of the App to update")
 	}
 	appPath := path.Join(developersPath, s.developerId, "apps", app.Name)
-	
+
   req, e := s.client.NewRequest("POST", appPath, app)
   if e != nil {
     return nil, nil, e
@@ -148,4 +148,3 @@ func (s *DeveloperAppsServiceOp) Update(app DeveloperApp) (*DeveloperApp, *Respo
   }
   return &returnedApp, resp, e
 }
-

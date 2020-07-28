@@ -1,6 +1,6 @@
-# golang client library for Apigee Edge administrative API
+# golang client library for Apigee administrative API
 
-Use this from Go-lang programs to invoke administrative operations on Apigee Edge.
+Use this from Go-lang programs to invoke administrative operations on Apigee.
 
 The goal is to allow golang programs to easiy do these things:
 
@@ -16,7 +16,7 @@ The goal is to allow golang programs to easiy do these things:
 | cache         | list, query, create, delete, clear
 | environment   | list, query
 
-The Apigee Edge administrative API is just a REST-ful API, so of course any go program could invoke it directly. This library will provide a wrapper, which will make it easier.
+The Apigee administrative API is just a REST-ful API, so of course any go program could invoke it directly. This library will provide a wrapper, which will make it easier.
 
 Not yet in scope:
 
@@ -48,10 +48,10 @@ This project is a work-in-progress. Here's the status:
 | entity type   | implemented              | not implemented yet
 | :------------ | :----------------------- | :--------------------
 | apis          | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy, inquire deployment status |
-| sharedflows   | | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy, inquire deployment status 
+| sharedflows   | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy, inquire deployment status |
 | apiproducts   | list, query, create, delete modify description, modify approvalType, modify scopes, add or remove proxy, add or remove custom attrs, modify public/private, change quota | |
 | developers    | list, query, create, update, delete, modify custom attrs, make active or inactive, modify custom attrs |
-| developerapps | list, query, create, delete, revoke, approve, modify custom attrs | add new credential, remove credential 
+| developerapps | list, query, create, delete, revoke, approve, modify custom attrs | add new credential, remove credential
 | credential    | | list, revoke, approve, add apiproduct, remove apiproduct |
 | kvm           | | list, query, create, delete, get all entries, get entry, add entry, modify entry, remove entry
 | cache         | list, query | create, delete, clear |
@@ -83,7 +83,7 @@ func main() {
   proxyName := ""
   namePtr := flag.String("name", "", "name for the API Proxy")
   srcPtr := flag.String("src", "", "a directory containing an exploded apiproxy bundle, or a zipped bundle")
-  orgPtr := flag.String("org", "", "an Edge Organization")
+  orgPtr := flag.String("org", "", "an Apigee Organization")
   flag.Parse()
 
   if *namePtr != "" {
@@ -95,14 +95,14 @@ func main() {
     return
   }
 
-  var auth *apigee.EdgeAuth = nil
+  var auth *apigee.AdminAuth = nil
 
   // Specifying nil for Auth implies "read from .netrc"
   // Specify a password explicitly like so:
-  // auth := apigee.EdgeAuth{Username: "user@example.org", Password: "Secret*123"}
+  // auth := apigee.AdminAuth{Username: "user@example.org", Password: "Secret*123"}
 
-  opts := &apigee.EdgeClientOptions{Org: *orgPtr, Auth: auth, Debug: false }
-  client, e := apigee.NewEdgeClient(opts)
+  opts := &apigee.ApigeeClientOptions{Org: *orgPtr, Auth: auth, Debug: false }
+  client, e := apigee.NewApigeeClient(opts)
   if e != nil {
     fmt.Printf("while initializing Edge client, error:\n%#v\n", e)
     return
@@ -121,14 +121,14 @@ func main() {
 
 ```
 
-### Deleting an API Proxy
+### Deleting a specific API Proxy Revision
 
 ```go
 func main() {
-  opts := &apigee.EdgeClientOptions{Org: *orgPtr, Auth: nil, Debug: false }
-  client, e := apigee.NewEdgeClient(opts)
+  opts := &apigee.ApigeeClientOptions{Org: *orgPtr, Auth: nil, Debug: false }
+  client, e := apigee.NewApigeeClient(opts)
   if e != nil {
-    fmt.Printf("while initializing Edge client, error:\n%#v\n", e)
+    fmt.Printf("while initializing Apigee client, error:\n%#v\n", e)
     return
   }
   fmt.Printf("Deleting...\n")
@@ -143,6 +143,28 @@ func main() {
 }
 ```
 
+### Deleting all revisions of an API Proxy
+```go
+func main() {
+  opts := &apigee.ApigeeClientOptions{Org: *orgPtr, Auth: nil, Debug: false }
+  client, e := apigee.NewApigeeClient(opts)
+  if e != nil {
+    fmt.Printf("while initializing Apigee client, error:\n%#v\n", e)
+    return
+  }
+  fmt.Printf("Deleting...\n")
+  // works only if no revisions are deployed
+  deletedItem, resp, e := client.Proxies.Delete(proxyName)
+  if e != nil {
+    fmt.Printf("while deleting, error:\n%#v\n", e)
+    return
+  }
+  fmt.Printf("status: %s\n", resp.Status)
+  defer resp.Body.Close()
+  fmt.Printf("deleted: %#v\n", deletedItem)
+}
+```
+
 ### Listing API Products
 
 ```go
@@ -154,8 +176,8 @@ func main() {
     return
   }
 
-  opts := &apigee.EdgeClientOptions{Org: *orgPtr, Auth: nil, Debug: false }
-  client, e := apigee.NewEdgeClient(opts)
+  opts := &apigee.ApigeeClientOptions{Org: *orgPtr, Auth: nil, Debug: false }
+  client, e := apigee.NewApigeeClient(opts)
   if e != nil {
     fmt.Printf("while initializing Edge client, error:\n%#v\n", e)
     return
@@ -188,9 +210,11 @@ func main() {
 
 ## Bugs
 
+* The function is incomplete.
+
 * There tests are incomplete.
 
-* The examples are incomplete.
+* The examples are thin.
 
 * There is no package versioning strategy (eg, no use of GoPkg.in)
 

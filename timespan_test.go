@@ -19,7 +19,7 @@ func TestTimespan_New(t *testing.T) {
     {"1d", "86400000"},
     {"10d", "864000000"},
   }
-  
+
   for _, tc := range testCases {
     ts := NewTimespan(tc.input)
     // if (e != nil) {
@@ -36,5 +36,3 @@ func TestTimespan_New(t *testing.T) {
     }
   }
 }
-
-

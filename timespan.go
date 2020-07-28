@@ -19,12 +19,12 @@ type Timespan struct {
 func NewTimespan(initializer string) *Timespan {
 	initializer = strings.ToLower(initializer)
 	if strings.HasSuffix(initializer, "d") {
-		s := strings.TrimSuffix(initializer, "d") 
+		s := strings.TrimSuffix(initializer, "d")
 		i, _ := strconv.Atoi(s)
 		i = i * 24
 		initializer = fmt.Sprintf("%dh", i)
 	}
-	
+
 	duration, _ := time.ParseDuration(initializer)
 	return &Timespan{duration}
 }
@@ -43,4 +43,3 @@ func (span *Timespan) UnmarshalJSON(b []byte) error {
 func (span Timespan) String() string {
   return span.String()
 }
-
