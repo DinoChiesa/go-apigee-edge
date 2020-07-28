@@ -18,7 +18,7 @@ type ProductsService interface {
 }
 
 type ProductsServiceOp struct {
-  client *EdgeClient
+  client *ApigeeClient
 }
 
 var _ ProductsService = &ProductsServiceOp{}
@@ -114,7 +114,7 @@ func (s *ProductsServiceOp) Delete(productName string) (*ApiProduct, *Response, 
   return &deletedProduct, resp, e
 }
 
-// List retrieves the list of apiproduct names for the organization referred by the EdgeClient.
+// List retrieves the list of apiproduct names for the organization referred by the ApigeeClient.
 func (s *ProductsServiceOp) List() ([]string, *Response, error) {
   req, e := s.client.NewRequest("GET", productsPath, nil)
   if e != nil {

@@ -25,28 +25,21 @@ const (
 func randomDeveloperFromTemplate() (Developer, error) {
 	got := Developer{}
 	e := json.Unmarshal([]byte(developerJson1), &got)
-	
+
 	if e != nil {
 		return got, e
 	}
 	// assign values
-	tag := pretag + randomString(6)
+	tag := testPrefix + randomString(6)
 	got.Email = tag + got.Email
-	got.UserName = tag + "-" + got.UserName 
+	got.UserName = tag + "-" + got.UserName
 	got.FirstName = got.FirstName + "-" + tag
 	return got, e
 }
 
 
 func TestDeveloperCreateDelete(t *testing.T) {
-  opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
-  client, e := NewEdgeClient(opts)
-  if e != nil {
-		t.Errorf("while initializing Edge client, error:\n%#v\n", e)
-    return
-  }
-  //wait(1)
-
+  client := NewClientForTesting(t)
 	dev, e := randomDeveloperFromTemplate()
   createdDeveloper, resp, e := client.Developers.Create(dev)
   if e != nil {
@@ -55,7 +48,7 @@ func TestDeveloperCreateDelete(t *testing.T) {
   }
 	t.Logf("Create: got=%+v", createdDeveloper)
 	t.Logf("resp: got=%+v", resp)
-	
+
   wait(1)
 
   deletedDeveloper, resp, e := client.Developers.Delete(createdDeveloper.Email)
@@ -68,13 +61,7 @@ func TestDeveloperCreateDelete(t *testing.T) {
 
 
 func TestDeveloperList(t *testing.T) {
-  opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
-  client, e := NewEdgeClient(opts)
-  if e != nil {
-		t.Errorf("while initializing Edge client, error:\n%#v\n", e)
-    return
-  }
-
+  client := NewClientForTesting(t)
   developerList, _, e := client.Developers.List()
   if e != nil {
 		t.Errorf("while listing Edge developers, error:\n%#v\n", e)
@@ -84,13 +71,7 @@ func TestDeveloperList(t *testing.T) {
 }
 
 func TestDeveloperGet(t *testing.T) {
-  opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
-  client, e := NewEdgeClient(opts)
-  if e != nil {
-		t.Errorf("while initializing Edge client, error:\n%#v\n", e)
-    return
-  }
-
+  client := NewClientForTesting(t)
   developerList, _, e := client.Developers.List()
   if e != nil {
 		t.Errorf("while listing Edge developers, error:\n%#v\n", e)
@@ -110,13 +91,7 @@ func TestDeveloperGet(t *testing.T) {
 
 
 func TestDeveloperUpdate(t *testing.T) {
-  opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
-  client, e := NewEdgeClient(opts)
-  if e != nil {
-		t.Errorf("while initializing Edge client, error:\n%#v\n", e)
-    return
-  }
-
+  client := NewClientForTesting(t)
 	dev, e := randomDeveloperFromTemplate()
   createdDeveloper, _, e := client.Developers.Create(dev)
   if e != nil {
@@ -150,5 +125,4 @@ func TestDeveloperUpdate(t *testing.T) {
   }
 	t.Logf("Approve")
   wait(1)
-	
 }

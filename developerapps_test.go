@@ -18,26 +18,19 @@ const (
 func randomAppFromTemplate() (DeveloperApp, error) {
 	got := DeveloperApp{}
 	e := json.Unmarshal([]byte(appJson1), &got)
-	
+
 	if e != nil {
 		return got, e
 	}
 	// assign values
-	tag := pretag + randomString(7)
+	tag := testPrefix + randomString(7)
 	got.Name = tag + "app"
 	return got, e
 }
 
 
 func TestDeveloperAppCreateDelete(t *testing.T) {
-  opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
-  client, e := NewEdgeClient(opts)
-  if e != nil {
-		t.Errorf("while initializing Edge client, error:\n%#v\n", e)
-    return
-  }
-  //wait(1)
-
+  client := NewClientForTesting(t)
 	dev, e := randomDeveloperFromTemplate()
   createdDeveloper, resp, e := client.Developers.Create(dev)
   if e != nil {
@@ -60,29 +53,27 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 	defer teardown(t)
   wait(1)
 
-	
 	devapps := client.Developers.Apps(createdDeveloper.Email)
 	devapp, e := randomAppFromTemplate()
 
-	
-  createdApp, resp, e := devapps.Create(devapp)	
+  createdApp, resp, e := devapps.Create(devapp)
   if e != nil {
 		t.Errorf("while creating developer app, error:\n%#v\n", e)
     return
   }
 	t.Logf("CreateApp: got=%v", createdApp)
-	
+
   wait(1)
 
-  resp, e = devapps.Revoke(createdApp.Name)	
+  resp, e = devapps.Revoke(createdApp.Name)
   if e != nil {
 		t.Errorf("while revoking developer app, error:\n%#v\n", e)
     return
   }
 	t.Logf("RevokeApp")
 	wait(1)
-	
-  got, resp, e := devapps.Get(createdApp.Name)	
+
+  got, resp, e := devapps.Get(createdApp.Name)
   if e != nil {
 		t.Errorf("while getting developer app, error:\n%#v\n", e)
     return
@@ -94,8 +85,8 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 		t.Errorf("inconsistent status")
 	}
 	t.Logf("GetApp")
-	
-  resp, e = devapps.Approve(createdApp.Name)	
+
+  resp, e = devapps.Approve(createdApp.Name)
   if e != nil {
 		t.Errorf("while approving developer app, error:\n%#v\n", e)
     return
@@ -104,7 +95,7 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 
 	wait(1)
 
-	got, resp, e = devapps.Get(createdApp.Name)	
+	got, resp, e = devapps.Get(createdApp.Name)
   if e != nil {
 		t.Errorf("while getting developer app, error:\n%#v\n", e)
     return
@@ -116,8 +107,8 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 		t.Errorf("inconsistent status")
 	}
 	t.Logf("GetApp")
-	
-  deletedApp, resp, e := devapps.Delete(createdApp.Name)	
+
+  deletedApp, resp, e := devapps.Delete(createdApp.Name)
   if e != nil {
 		t.Errorf("while creating developer app, error:\n%#v\n", e)
     return
@@ -125,6 +116,5 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 	t.Logf("DeleteApp: got=%v", deletedApp)
 
   wait(1)
-	
-}
 
+}

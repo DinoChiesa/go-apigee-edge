@@ -21,23 +21,25 @@ const (
   "displayName" : "FlightStatus",
   "environments" : [ "test" ],
   "name" : "FlightStatus",
-  "proxies" : [ "dino-test" ],
+  "proxies" : [ "will-be-replaced" ],
   "scopes" : [ "" ]
 }`
 )
 
 func randomProductFromTemplate(proxyname string) (ApiProduct, error) {
+
+	// just a way to quickly set values to a few defaults
 	got := ApiProduct{}
 	e := json.Unmarshal([]byte(productJson1), &got)
-	
+
 	if e != nil {
 		return got, e
 	}
 	// assign values
-	tag := pretag + randomString(7)
+	tag := testPrefix + randomString(7)
 	got.Name = tag + "-" + got.Name
 	got.Proxies = []string{proxyname}
-	got.DisplayName = tag + "-" + got.DisplayName 
+	got.DisplayName = tag + "-" + got.DisplayName
 	got.Description = tag + " " + randomString(8) + " " + randomString(18)
   got.Scopes = []string { randomString(1), randomString(2), }
 	return got, e
@@ -45,13 +47,7 @@ func randomProductFromTemplate(proxyname string) (ApiProduct, error) {
 
 
 func TestProductCreateDelete(t *testing.T) {
-  opts := &EdgeClientOptions{Org: orgName, Auth: nil, Debug: false }
-  client, e := NewEdgeClient(opts)
-  if e != nil {
-		t.Errorf("while initializing Apigee client, error:\n%#v\n", e)
-    return
-  }
-
+  client := NewClientForTesting(t)
   namelist, resp, e := client.Proxies.List()
   if e != nil {
 		t.Errorf("while listing proxies, error:\n%#v\n", e)
@@ -63,7 +59,7 @@ func TestProductCreateDelete(t *testing.T) {
   }
 
 	selectedProxy := namelist[rand.Intn(len(namelist))]
-	
+
 	product, e := randomProductFromTemplate(selectedProxy)
   createdProduct, resp, e := client.Products.Create(product)
   if e != nil {
@@ -72,7 +68,7 @@ func TestProductCreateDelete(t *testing.T) {
   }
 	t.Logf("Create: got=%v", createdProduct)
 	t.Logf("resp: got=%v", resp)
-	
+
   wait(1)
 
   deletedProduct, resp, e := client.Products.Delete(createdProduct.Name)
@@ -82,6 +78,3 @@ func TestProductCreateDelete(t *testing.T) {
   }
 	t.Logf("Delete: got=%v", deletedProduct)
 }
-
-
-

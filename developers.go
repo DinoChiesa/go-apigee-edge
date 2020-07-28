@@ -22,7 +22,7 @@ type DevelopersService interface {
 }
 
 type DevelopersServiceOp struct {
-  client *EdgeClient
+  client *ApigeeClient
 }
 
 var _ DevelopersService = &DevelopersServiceOp{}

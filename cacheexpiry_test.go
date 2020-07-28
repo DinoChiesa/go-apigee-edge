@@ -11,12 +11,12 @@ const (
    "expiryDate": { "value": "09-22-2016" },
    "valuesNull" : false
  }`
-  
+
   cacheJson2 = `{
-   "timeoutInSec" : { "value" : "300" },  
+   "timeoutInSec" : { "value" : "300" },
    "valuesNull" : false
  }`
-  
+
   cacheJson3 = `{
    "timeOfDay": { "value" : "14:30:00" },
    "valuesNull" : false
@@ -72,7 +72,7 @@ func TestCacheExpiry_Marshal(t *testing.T) {
     {"cacheJson2", cacheExpiry2, cacheJson2, false, true},
     {"cacheJson3", cacheExpiry3, cacheJson3, false, true},
   }
-  
+
   for _, tc := range testCases {
     out, err := json.Marshal(tc.data)
     if gotErr := (err != nil); gotErr != tc.wantErr {
@@ -83,7 +83,7 @@ func TestCacheExpiry_Marshal(t *testing.T) {
     if err := json.Compact(buffer, []byte(tc.expected)); err != nil {
       t.Errorf("%s: %v", tc.desc, err)
     }
-    equal := got == buffer.String() 
+    equal := got == buffer.String()
     if equal != tc.equal {
       t.Errorf("%s: value[actual=%s, expected=%s], equal[actual=%v, expected=%v]",
         tc.desc, got, tc.expected, equal, tc.equal)
@@ -115,4 +115,3 @@ func TestCacheExpiry_Marshal(t *testing.T) {
 //     }
 //   }
 // }
-

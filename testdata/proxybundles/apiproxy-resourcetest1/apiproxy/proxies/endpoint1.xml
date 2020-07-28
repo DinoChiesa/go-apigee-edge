@@ -1,0 +1,46 @@
+<ProxyEndpoint name='endpoint1'>
+  <Description>Default Proxy</Description>
+  <HTTPProxyConnection>
+    <BasePath>/resourcetest1</BasePath>
+    <Properties/>
+    <VirtualHost>secure</VirtualHost>
+  </HTTPProxyConnection>
+
+  <FaultRules/>
+
+  <PreFlow name="PreFlow">
+      <Request/>
+      <Response/>
+  </PreFlow>
+  <PostFlow name="PostFlow">
+      <Request/>
+      <Response/>
+  </PostFlow>
+
+  <Flows>
+    <Flow name='test1'>
+      <Description>test empty query params</Description>
+      <Request/>
+      <Response>
+        <Step>
+          <Name>AM-BasicResponse</Name>
+        </Step>
+        <Step>
+          <Name>JS-InsertResponseHeader</Name>
+        </Step>
+      </Response>
+      <Condition>(proxy.pathsuffix MatchesPath "/foo") and (request.verb = "GET")</Condition>
+    </Flow>
+
+    <Flow name='unknown request'>
+      <Request>
+        <Step><Name>RF-UnknownRequest</Name></Step>
+      </Request>
+      <Response/>
+    </Flow>
+
+  </Flows>
+
+  <RouteRule name='LoopbackRouteRule'/>
+
+</ProxyEndpoint>

@@ -13,7 +13,7 @@ type OrganizationService interface {
 }
 
 type OrganizationServiceOp struct {
-  client *EdgeClient
+  client *ApigeeClient
 }
 
 var _ OrganizationService = &OrganizationServiceOp{}
@@ -50,7 +50,7 @@ type Organization struct {
 
 // Get retrieves the information about an Organization, information including
 // the properties, and the created and last modified details, the list of Environments,
-// etc. 
+// etc.
 func (s *OrganizationServiceOp) Get(org string) (*Organization, *Response, error) {
   opath := ""
 	if org != "" {
@@ -67,4 +67,3 @@ func (s *OrganizationServiceOp) Get(org string) (*Organization, *Response, error
   }
   return &returnedOrg, resp, e
 }
-

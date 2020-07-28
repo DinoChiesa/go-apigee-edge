@@ -34,7 +34,7 @@ func TestTimestamp_Marshal(t *testing.T) {
     {"workStartDate", Timestamp{workStartDate}, originMs, false, false},
     {"workStartDate", Timestamp{workStartDate}, workStartMs, false, true},
   }
-  
+
   for _, tc := range testCases {
     out, err := json.Marshal(tc.data)
     if gotErr := (err != nil); gotErr != tc.wantErr {
@@ -100,4 +100,3 @@ func TestTimestamp_MarshalReflexivity(t *testing.T) {
     }
   }
 }
-
