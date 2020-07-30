@@ -38,7 +38,7 @@ Support is available on a best-effort basis via github or [community.apigee.com]
 
 ## Copyright and License
 
-This code is [Copyright (c) 2016 Apigee Corp, 2017-2019 Google LLC](NOTICE). it is licensed under the [Apache 2.0 Source Licese](LICENSE).
+This code is [Copyright (c) 2016 Apigee Corp, 2017-2020 Google LLC](NOTICE). it is licensed under the [Apache 2.0 Source Licese](LICENSE).
 
 
 ## Status
