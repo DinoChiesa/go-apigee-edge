@@ -62,6 +62,42 @@ Pull requests are welcomed.
 
 ## Usage Examples
 
+## The Import
+
+This shows the reference to import.
+
+```go
+package main
+
+import (
+  "github.com/DinoChiesa/go-apigee-edge"
+)
+```
+
+### List environments
+
+This example connects to Apigee SaaS using credentials obtained from .netrc (because Auth:nil). It will use an OAuth token (WantToken: true).
+That token gets stashed in a local file, and the library will re-use the token on subsequent runs, until the token expires.
+
+```go
+  opts := &apigee.ApigeeClientOptions{Org: "myorg", Auth: nil, Debug: true, WantToken: true }
+  client, e := apigee.NewApigeeClient(opts)
+  if e != nil {
+    fmt.Printf("while initializing Edge client, error:\n%#v\n", e)
+    return
+  }
+
+  fmt.Printf("\nListing...\n")
+  list, resp, e := client.Environments.List()
+  if e != nil {
+    fmt.Printf("while listing, error:\n%#v\n", e)
+    return
+  }
+  // full response is available in resp if necessary
+  showStatus(resp)
+  fmt.Printf("environments: %#v\n", list)
+```
+
 ### Importing a Proxy
 
 ```go
