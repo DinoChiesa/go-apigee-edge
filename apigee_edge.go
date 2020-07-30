@@ -33,49 +33,6 @@ const (
 	DeploymentDelay = "20"
 )
 
-// ApigeeClient manages communication with Apigee V1 Admin API.
-type ApigeeClient struct {
-  // HTTP client used to communicate with the Edge API.
-  client *http.Client
-
-  auth *AdminAuth
-  debug bool
-
-  // Base URL for API requests.
-  BaseURL *url.URL
-
-  // User agent for client
-  UserAgent string
-
-  // Services used for communicating with the API
-  Proxies          ProxiesService
-  SharedFlows      SharedFlowsService
-  Products         ProductsService
-  Developers       DevelopersService
-  Environments     EnvironmentsService
-  Organization     OrganizationService
-  Caches           CachesService
-	Options          ApigeeClientOptions
-
-  // Account           AccountService
-  // Actions           ActionsService
-  // Domains           DomainsService
-  // DropletActions    DropletActionsService
-  // Images            ImagesService
-  // ImageActions      ImageActionsService
-  // Keys              KeysService
-  // Regions           RegionsService
-  // Sizes             SizesService
-  // FloatingIPs       FloatingIPsService
-  // FloatingIPActions FloatingIPActionsService
-  // Storage           StorageService
-  // StorageActions    StorageActionsService
-  // Tags              TagsService
-
-  // Optional function called after every successful request made to the DO APIs
-  onRequestCompleted RequestCompletionCallback
-}
-
 // RequestCompletionCallback defines the type of the request callback function
 type RequestCompletionCallback func(*http.Request, *http.Response)
 
@@ -83,20 +40,6 @@ type RequestCompletionCallback func(*http.Request, *http.Response)
 type ListOptions struct {
   // to ask for expanded results
   Expand bool `url:"expand"`
-}
-
-// wrap the standard http.Response returned from Apigee Edge. (why?)
-type Response struct {
-  *http.Response
-}
-
-// An ErrorResponse reports the error caused by an API request
-type ErrorResponse struct {
-  // HTTP response that caused this error
-  Response *http.Response
-
-  // Error message - maybe the json for this is "fault"
-  Message string `json:"message"`
 }
 
 func addOptions(s string, opt interface{}) (string, error) {
@@ -126,37 +69,6 @@ func addOptions(s string, opt interface{}) (string, error) {
   return origURL.String(), nil
 }
 
-
-type ApigeeClientOptions struct {
-  httpClient *http.Client;
-
-  // Optional. The Admin base URL. For example, if using OPDK this might be
-  // http://192.168.10.56:8080 . It defaults to https://api.enterprise.apigee.com
-  MgmtUrl string
-
-  // Specify the Edge organization name.
-  Org string;
-
-  // Required. Authentication information for the Edge Management server.
-  Auth *AdminAuth
-
-  // Optional. Warning: if set to true, HTTP Basic Auth base64 blobs will appear in output.
-  Debug bool
-}
-
-// AdminAuth holds information about how to authenticate to the Edge Management server.
-type AdminAuth struct {
-  // Optional. The path to the .netrc file that holds credentials for the Edge Management server.
-  // By default, this is ${HOME}/.netrc .  If you specify a Password, this option is ignored.
-  NetrcPath string
-
-  // Optional. The username to use when authenticating to the Edge Management server.
-  // Ignored if you specify a NetrcPath.
-  Username string
-
-  // Optional. Used if you explicitly specify a Password.
-  Password string
-}
 
 
 func retrieveAuthFromNetrc(netrcPath, host string) (*AdminAuth, error) {
@@ -211,6 +123,9 @@ func NewApigeeClient(o *ApigeeClientOptions) (*ApigeeClient,error) {
   } else {
     c.auth = &AdminAuth{Username: o.Auth.Username, Password: o.Auth.Password}
   }
+
+	c.LoginBaseUrl = o.LoginBaseUrl
+	c.WantToken = o.WantToken
 
   if e != nil {
     return nil, e
@@ -268,10 +183,10 @@ func NewApigeeClient(o *ApigeeClientOptions) (*ApigeeClient,error) {
 // always be specified without a preceding slash. If specified, the value
 // pointed to by body is JSON encoded and included in as the request body.
 func (c *ApigeeClient) NewRequest(method, urlStr string, body interface{}) (*http.Request, error) {
-  rel, err := url.Parse(urlStr)
+  rel, e := url.Parse(urlStr)
   ctype := ""
-  if err != nil {
-    return nil, err
+  if e != nil {
+    return nil, e
   }
   //fmt.Printf("BaseURL: %#v\n", c.BaseURL)
   u := c.BaseURL.ResolveReference(rel)
@@ -293,21 +208,21 @@ func (c *ApigeeClient) NewRequest(method, urlStr string, body interface{}) (*htt
       default:
         ctype = appJson
         buf := new(bytes.Buffer)
-        err := json.NewEncoder(buf).Encode(body)
-        if err != nil {
-          return nil, err
+        e := json.NewEncoder(buf).Encode(body)
+        if e != nil {
+          return nil, e
         }
-        req, err = http.NewRequest(method, u.String(), buf)
+        req, e = http.NewRequest(method, u.String(), buf)
       case io.Reader:
         ctype = octetStream
-        req, err = http.NewRequest(method, u.String(), body.(io.Reader))
+        req, e = http.NewRequest(method, u.String(), body.(io.Reader))
     }
   } else {
-    req, err = http.NewRequest(method, u.String(), nil)
+    req, e = http.NewRequest(method, u.String(), nil)
   }
 
-  if err != nil {
-    return nil, err
+  if e != nil {
+    return nil, e
   }
 
   if ctype != "" {
@@ -315,7 +230,18 @@ func (c *ApigeeClient) NewRequest(method, urlStr string, body interface{}) (*htt
   }
   req.Header.Add("Accept", appJson)
   req.Header.Add("User-Agent", c.UserAgent)
-  req.SetBasicAuth(c.auth.Username, c.auth.Password)
+
+	if c.WantToken {
+		token, e := GetToken(c)
+  if e != nil {
+    return nil, e
+  }
+
+		c.auth.Token = *token.AccessToken
+		req.Header.Add("Authorization", "Bearer " + c.auth.Token)
+	} else {
+		req.SetBasicAuth(c.auth.Username, c.auth.Password)
+	}
   return req, nil
 }
 
