@@ -5,7 +5,7 @@ import (
 )
 
 // CompanyAppCredentialService is an interface for interfacing with the Apigee Edge Admin API
-// dealing with companyApp credentials.
+// dealing with companyApp credentials/keys.
 type CompanyAppCredentialService interface {
 	Create(string, string, CompanyAppCredential) (*Credential, *Response, error)
 	Update(string, string, string, CompanyAppCredential) (*Credential, *Response, error)
@@ -29,6 +29,7 @@ type CompanyAppCredential struct {
 	Scopes         []string    `json:"scopes,omitempty"`
 }
 
+// Create a company app's consumer key and secret
 func (s *CompanyAppCredentialServiceOp) Create(companyName string, appName string, companyAppCredential CompanyAppCredential) (*Credential, *Response, error) {
 
 	uripath := path.Join("companies", companyName, "apps", appName, "keys", "create")
@@ -49,6 +50,7 @@ func (s *CompanyAppCredentialServiceOp) Create(companyName string, appName strin
 
 }
 
+// Update existing company app's consumer key with new API products or attributes
 func (s *CompanyAppCredentialServiceOp) Update(companyName string, appName string, consumerKey string, companyAppCredential CompanyAppCredential) (*Credential, *Response, error) {
 
 	uripath := path.Join("companies", companyName, "apps", appName, "keys", consumerKey)
@@ -69,6 +71,7 @@ func (s *CompanyAppCredentialServiceOp) Update(companyName string, appName strin
 
 }
 
+// Get information about a company app's consumer key
 func (s *CompanyAppCredentialServiceOp) Get(companyName string, appName string, consumerKey string) (*Credential, *Response, error) {
 
 	uripath := path.Join("companies", companyName, "apps", appName, "keys", consumerKey)
@@ -86,6 +89,7 @@ func (s *CompanyAppCredentialServiceOp) Get(companyName string, appName string, 
 
 }
 
+// Delete a company app's consumer key
 func (s *CompanyAppCredentialServiceOp) Delete(companyName string, appName string, consumerKey string) (*Response, error) {
 
 	uripath := path.Join("companies", companyName, "apps", appName, "keys", consumerKey)
@@ -104,6 +108,7 @@ func (s *CompanyAppCredentialServiceOp) Delete(companyName string, appName strin
 
 }
 
+// Remove an API product from a company app's consumer key
 func (s *CompanyAppCredentialServiceOp) RemoveApiProduct(companyName string, appName string, consumerKey string, apiProductName string) (*Response, error) {
 
 	uripath := path.Join("companies", companyName, "apps", appName, "keys", consumerKey, "apiproducts", apiProductName)
