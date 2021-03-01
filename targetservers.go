@@ -81,8 +81,6 @@ func (s *TargetserversServiceOp) Create(targetserver TargetServer, env string) (
 	var p1 string
 
 	p1 = path.Join("e", env, targetserversPath)
-
-	fmt.Printf("argumnets are %v, %v", targetserver, env)
 	req, e := s.client.NewRequest("POST", p1, targetserver)
 	if e != nil {
 		return nil, nil, e
