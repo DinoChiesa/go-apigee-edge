@@ -1,13 +1,13 @@
 package apigee
 
 import (
-  "encoding/json"
-  "testing"
+	"encoding/json"
 	"math/rand"
+	"testing"
 )
 
 const (
-  productJson1 = `{
+	productJson1 = `{
   "apiResources" : [ ],
   "approvalType" : "auto",
   "attributes" : [ {
@@ -41,40 +41,39 @@ func randomProductFromTemplate(proxyname string) (ApiProduct, error) {
 	got.Proxies = []string{proxyname}
 	got.DisplayName = tag + "-" + got.DisplayName
 	got.Description = tag + " " + randomString(8) + " " + randomString(18)
-  got.Scopes = []string { randomString(1), randomString(2), }
+	got.Scopes = []string{randomString(1), randomString(2)}
 	return got, e
 }
 
-
 func TestProductCreateDelete(t *testing.T) {
-  client := NewClientForTesting(t)
-  namelist, resp, e := client.Proxies.List()
-  if e != nil {
+	client := NewClientForTesting(t)
+	namelist, resp, e := client.Proxies.List()
+	if e != nil {
 		t.Errorf("while listing proxies, error:\n%#v\n", e)
-    return
-  }
-  if len(namelist) <= 0 {
+		return
+	}
+	if len(namelist) <= 0 {
 		t.Errorf("no proxies found")
-    return
-  }
+		return
+	}
 
 	selectedProxy := namelist[rand.Intn(len(namelist))]
 
 	product, e := randomProductFromTemplate(selectedProxy)
-  createdProduct, resp, e := client.Products.Create(product)
-  if e != nil {
+	createdProduct, resp, e := client.Products.Create(product)
+	if e != nil {
 		t.Errorf("while creating Apigee product, error:\n%#v\n", e)
-    return
-  }
+		return
+	}
 	t.Logf("Create: got=%v", createdProduct)
 	t.Logf("resp: got=%v", resp)
 
-  wait(1)
+	wait(1)
 
-  deletedProduct, resp, e := client.Products.Delete(createdProduct.Name)
-  if e != nil {
+	deletedProduct, resp, e := client.Products.Delete(createdProduct.Name)
+	if e != nil {
 		t.Errorf("while deleting Apigee product, error:\n%#v\n", e)
-    return
-  }
+		return
+	}
 	t.Logf("Delete: got=%v", deletedProduct)
 }
