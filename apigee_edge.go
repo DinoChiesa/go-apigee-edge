@@ -56,6 +56,7 @@ type ApigeeClient struct {
   Organization     OrganizationService
   Caches           CachesService
 	Options          ApigeeClientOptions
+	TargetServers TargetserversService
 
   // Account           AccountService
   // Actions           ActionsService
@@ -201,6 +202,7 @@ func NewApigeeClient(o *ApigeeClientOptions) (*ApigeeClient,error) {
   c.Environments = &EnvironmentsServiceOp{client: c}
   c.Organization = &OrganizationServiceOp{client: c}
   c.Caches = &CachesServiceOp{client: c}
+	c.TargetServers = &TargetserversServiceOp{client: c}
   c.Options = *o;
 
   var e error = nil
