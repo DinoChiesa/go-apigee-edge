@@ -1,20 +1,19 @@
 package apigee
 
 import (
-  "errors"
-  "strings"
-  "time"
-  "strconv"
-  "fmt"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // Timespan represents a timespan that can be parsed from a string like "3d"
 // meaning "3 days". It will typically be serialized as milliseconds =
 // milliseconds-since-unix-epoch.
 type Timespan struct {
-  time.Duration
+	time.Duration
 }
-
 
 func NewTimespan(initializer string) *Timespan {
 	initializer = strings.ToLower(initializer)
@@ -30,8 +29,8 @@ func NewTimespan(initializer string) *Timespan {
 }
 
 func (span Timespan) MarshalJSON() ([]byte, error) {
-  s := fmt.Sprintf("%0.f", span.Duration.Seconds()*1000)
-  return []byte(s), nil
+	s := fmt.Sprintf("%0.f", span.Duration.Seconds()*1000)
+	return []byte(s), nil
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
@@ -41,5 +40,5 @@ func (span *Timespan) UnmarshalJSON(b []byte) error {
 }
 
 func (span Timespan) String() string {
-  return span.String()
+	return span.String()
 }
