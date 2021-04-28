@@ -18,6 +18,7 @@ type Credential struct {
 	ExpiresAt      int                    `json:"expiresAt,omitempty"`
 	IssuedAt       int                    `json:"issuedAt,omitempty"`
 	Scopes         []string               `json:"scopes,omitempty"`
+	Status         string                 `json:"status,omitempty"`
 }
 
 //This is just a placeholder
