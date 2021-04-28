@@ -49,7 +49,7 @@ This project is a work-in-progress. Here's the status:
 | developers    | | list, query, make active or inactive, create, delete, modify custom attrs | 
 | developer app | | list, query, create, delete, revoke, approve, add new credential, remove credential | modify custom attrs
 | credential    | | list, revoke, approve, add apiproduct, remove apiproduct |
-| kvm           | | list, query, create, delete, get all entries, get entry, add entry, modify entry, remove entry
+| kvm           | query, create, delete,  get entry, add entry, modify entry, remove entry | list, get all entries
 | cache         | | list, query, create, delete, clear | 
 | environment   | | list, query |
 
