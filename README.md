@@ -20,7 +20,7 @@ The Apigee Edge administrative API is just a REST-ful API, so of course any go p
 
 Not in scope:
 
-- OAuth2.0 tokens - Listing, Querying, Approving, Revoking, Deleting, or Updating 
+- OAuth2.0 tokens - Listing, Querying, Approving, Revoking, Deleting, or Updating
 - TargetServers: list, create, edit, etc
 - keystores, truststores: adding certs, listing certs
 - data masks
@@ -44,9 +44,9 @@ This project is a work-in-progress. Here's the status:
 
 | entity type   | implemented              | not implemented yet
 | :------------ | :----------------------- | :--------------------
-| apis          | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy, inquire deployment status | 
-| apiproducts   | | list, query, create, delete, modify description, modify approvalType, modify scopes, add or remove proxy, add or remove custom attrs, modify public/private, change quota | 
-| developers    | | list, query, make active or inactive, create, delete, modify custom attrs | 
+| apis          | list, query, inquire revisions, import, export, delete, delete revision, deploy, undeploy, inquire deployment status |
+| apiproducts   | | list, query, create, delete, modify description, modify approvalType, modify scopes, add or remove proxy, add or remove custom attrs, modify public/private, change quota |
+| developers    | | list, query, make active or inactive, create, delete, modify custom attrs |
 | developer app | | list, query, create, delete, revoke, approve, add new credential, remove credential | modify custom attrs
 | credential    | | list, revoke, approve, add apiproduct, remove apiproduct |
 | kvm           | query, create, delete,  get entry, add entry, modify entry, remove entry | list, get all entries
@@ -82,19 +82,19 @@ func main() {
 
   if *namePtr != "" {
     proxyName = *namePtr
-  } 
-  
+  }
+
   if *srcPtr == "" || *orgPtr == "" {
     usage()
     return
   }
-  
+
   var auth *apigee.EdgeAuth = nil
-  
+
   // Specifying nil for Auth implies "read from .netrc"
   // Specify a password explicitly like so:
   // auth := apigee.EdgeAuth{Username: "user@example.org", Password: "Secret*123"}
-  
+
   opts := &apigee.EdgeClientOptions{Org: *orgPtr, Auth: auth, Debug: false }
   client, e := apigee.NewEdgeClient(opts)
   if e != nil {
@@ -110,7 +110,7 @@ func main() {
   }
   fmt.Printf("status: %d\n", resp.StatusCode)
   fmt.Printf("status: %s\n", resp.Status)
-  defer resp.Body.Close()  
+  defer resp.Body.Close()
   fmt.Printf("proxyRev: %#v\n", proxyRev)
 
   // TODO: Deploy the proxy revision with override = 10
@@ -119,7 +119,7 @@ func main() {
 
   fmt.Printf("\nWaiting...\n")
   time.Sleep(3 * time.Second)
-  
+
   fmt.Printf("\nDeleting...\n")
   deletedRev, resp, e := client.Proxies.DeleteRevision(proxyRev.Name, proxyRev.Revision)
   if e != nil {
@@ -128,7 +128,7 @@ func main() {
   }
   fmt.Printf("status: %d\n", resp.StatusCode)
   fmt.Printf("status: %s\n", resp.Status)
-  defer resp.Body.Close()  
+  defer resp.Body.Close()
   fmt.Printf("proxyRev: %#v\n", deletedRev)
 }
 
@@ -140,7 +140,7 @@ func main() {
 
 * When importing from a source directory, the library creates a temporary zip file, but doesn't delete the file.
 
-* There is no working code for example clients, included in the distribution here. 
+* There is no working code for example clients, included in the distribution here.
 
 * There is no package versioning strategy (eg, no use of GoPkg.in)
 

@@ -25,6 +25,7 @@ type ProxiesService interface {
 	List() ([]string, *Response, error)
 	Get(string) (*Proxy, *Response, error)
 	Import(string, string) (*ProxyRevision, *Response, error)
+	Update(string, string, string) (*ProxyRevisionUpdate, *Response, error)
 	Delete(string) (*DeletedProxyInfo, *Response, error)
 	DeleteRevision(string, Revision) (*ProxyRevision, *Response, error)
 	Deploy(string, string, Revision, int, bool) (*ProxyRevisionDeployment, *Response, error)
@@ -73,6 +74,11 @@ type ProxyRevision struct {
 	ProxyEndpoints  []string  `json:"proxyEndpoints,omitempty"`
 	Policies        []string  `json:"policies,omitempty"`
 	Type            string    `json:"type,omitempty"`
+}
+
+// ProxyRevisionUpdate only returns the updated revision.
+type ProxyRevisionUpdate struct {
+	Revision Revision `json:"revision,omitempty"`
 }
 
 // ProxyRevisionDeployment holds information about the deployment state of a
@@ -249,43 +255,16 @@ func zipDirectory(source string, target string, filter func(string) bool) error 
 // the path of a zip file containing an API Proxy bundle. Returns the API proxy revision information.
 // This method does not deploy the imported proxy. See the Deploy method.
 func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevision, *Response, error) {
-	info, err := os.Stat(source)
+	zipfileName, err := getZip(proxyName, "Import", source)
 	if err != nil {
 		return nil, nil, err
 	}
-	zipfileName := source
 
-	log.Printf("[INFO] *** Import *** isDir: %#v\n", info.IsDir())
-
-	if info.IsDir() {
-		// create a temporary zip file
-		if proxyName == "" {
-			proxyName = filepath.Base(source)
-		}
-		log.Printf("[INFO] *** Import *** proxyName: %#v\n", proxyName)
-		tempDir, e := ioutil.TempDir("", "go-apigee-edge-")
-		if e != nil {
-			log.Printf("[ERROR] *** Import *** error: %#v\n", e)
-			return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
-		}
-		log.Printf("[INFO] *** Import *** tempDir: %#v\n", tempDir)
-		log.Printf("[INFO] *** Import *** sourceDir: %#v\n", source)
-		zipfileName = path.Join(tempDir, "apiproxy.zip")
-		e = zipDirectory(path.Join(source, "apiproxy"), zipfileName, smartFilter)
-		if e != nil {
-			return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
-		}
-		log.Printf("[INFO] *** zipped %s into %s\n\n", source, zipfileName)
-	}
-
-	if !strings.HasSuffix(zipfileName, ".zip") {
-		return nil, nil, errors.New("source must be a zipfile")
-	}
-
-	info, err = os.Stat(zipfileName)
+	ioreader, err := os.Open(*zipfileName)
 	if err != nil {
 		return nil, nil, err
 	}
+	defer ioreader.Close()
 
 	// append the query params
 	origURL, err := url.Parse(proxiesPath)
@@ -298,12 +277,6 @@ func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevisi
 	origURL.RawQuery = q.Encode()
 	path := origURL.String()
 
-	ioreader, err := os.Open(zipfileName)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer ioreader.Close()
-
 	req, e := s.client.NewRequest("POST", path, ioreader, "")
 	if e != nil {
 		return nil, nil, e
@@ -314,6 +287,78 @@ func (s *ProxiesServiceOp) Import(proxyName string, source string) (*ProxyRevisi
 		return nil, resp, e
 	}
 	return &returnedProxyRevision, resp, e
+}
+
+// Update an API proxy revision that already exists.
+// The source can be either a filesystem directory containing an exploded apiproxy bundle, OR
+// the path of a zip file containing an API Proxy bundle. Returns the API proxy revision.
+func (s *ProxiesServiceOp) Update(proxyName string, rev string, source string) (*ProxyRevisionUpdate, *Response, error) {
+	zipfileName, err := getZip(proxyName, "Update", source)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ioreader, err := os.Open(*zipfileName)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer ioreader.Close()
+
+	path := path.Join(proxiesPath, proxyName, "revisions", rev)
+
+	req, e := s.client.NewRequest("POST", path, ioreader, "")
+	if e != nil {
+		return nil, nil, e
+	}
+	returnedProxyRevision := ProxyRevisionUpdate{}
+	resp, e := s.client.Do(req, &returnedProxyRevision)
+	if e != nil {
+		return nil, resp, e
+	}
+	return &returnedProxyRevision, resp, e
+}
+
+// Checks a source directory and creates a ZIP file.
+func getZip(proxyName string, method string, source string) (*string, error) {
+	info, err := os.Stat(source)
+	if err != nil {
+		return nil, err
+	}
+	zipfileName := source
+
+	log.Printf("[INFO] *** %s *** isDir: %#v\n", method, info.IsDir())
+
+	if info.IsDir() {
+		// create a temporary zip file
+		if proxyName == "" {
+			proxyName = filepath.Base(source)
+		}
+		log.Printf("[INFO] *** %s *** proxyName: %#v\n", method, proxyName)
+		tempDir, e := ioutil.TempDir("", "go-apigee-edge-")
+		if e != nil {
+			log.Printf("[ERROR] *** %s *** error: %#v\n", method, e)
+			return nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
+		}
+		log.Printf("[INFO] *** %s *** tempDir: %#v\n", method, tempDir)
+		log.Printf("[INFO] *** %s *** sourceDir: %#v\n", method, source)
+		zipfileName = path.Join(tempDir, "apiproxy.zip")
+		e = zipDirectory(path.Join(source, "apiproxy"), zipfileName, smartFilter)
+		if e != nil {
+			return nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
+		}
+		log.Printf("[INFO] *** zipped %s into %s\n\n", source, zipfileName)
+	}
+
+	if !strings.HasSuffix(zipfileName, ".zip") {
+		return nil, errors.New("source must be a zipfile")
+	}
+
+	info, err = os.Stat(zipfileName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &zipfileName, nil
 }
 
 // Export a revision of an API proxy within an organization, to a filesystem file.
