@@ -15,6 +15,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+
 	//"strconv"
 	//"time"
 
@@ -89,8 +90,8 @@ func retrieveAuthFromNetrc(netrcPath, host string) (*AdminAuth, error) {
 
 // NewApigeeClient returns a new ApigeeClient.
 func NewApigeeClient(o *ApigeeClientOptions) (*ApigeeClient, error) {
-	httpClient := o.httpClient
-	if o.httpClient == nil {
+	httpClient := o.HttpClient
+	if o.HttpClient == nil {
 		httpClient = http.DefaultClient
 	}
 	mgmtUrl := o.MgmtUrl

@@ -69,7 +69,7 @@ type ErrorResponse struct {
 }
 
 type ApigeeClientOptions struct {
-	httpClient *http.Client
+	HttpClient *http.Client
 
 	// Optional. The Apigee Admin base URL. For example, if using OPDK this might be
 	// http://192.168.10.56:8080 . It defaults to https://api.enterprise.apigee.com
