@@ -97,6 +97,10 @@ func NewApigeeClient(o *ApigeeClientOptions) (*ApigeeClient, error) {
 	c.LoginBaseUrl = o.LoginBaseUrl
 	c.WantToken = o.WantToken
 
+	if c.WantToken {
+		c.TokenSource = NewTokenSource(o)
+	}
+
 	if e != nil {
 		return nil, e
 	}
@@ -201,12 +205,12 @@ func (c *ApigeeClient) NewRequest(method, urlStr string, body interface{}) (*htt
 	req.Header.Add("User-Agent", c.UserAgent)
 
 	if c.WantToken {
-		token, e := GetToken(c)
+		token, e := c.TokenSource.GetToken(req.Context())
 		if e != nil {
 			return nil, e
 		}
 
-		c.auth.Token = *token.AccessToken
+		c.auth.Token = token.AccessToken
 		req.Header.Add("Authorization", "Bearer "+c.auth.Token)
 	} else {
 		req.SetBasicAuth(c.auth.Username, c.auth.Password)

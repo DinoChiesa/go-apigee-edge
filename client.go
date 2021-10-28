@@ -20,7 +20,8 @@ type ApigeeClient struct {
 	BaseURL *url.URL
 
 	// Optional. tells whether to try to obtain a token or not.
-	WantToken bool
+	WantToken   bool
+	TokenSource *TokenSource
 
 	// User agent for client
 	UserAgent string
