@@ -308,7 +308,7 @@ func TestProxyInquireDeployment(t *testing.T) {
 
 	// deploy
 	randomPath := fmt.Sprintf("/%s-inquiredeployment", timestamp)
-	revisionDeployment, resp, e := client.Proxies.DeployAtPath(proxyName, randomPath, env, proxyRev.Revision)
+	_, resp, e = client.Proxies.DeployAtPath(proxyName, randomPath, env, proxyRev.Revision)
 	if e != nil {
 		t.Errorf("while deploying, error:\n%#v\n", e)
 		return
@@ -338,7 +338,7 @@ func TestProxyInquireDeployment(t *testing.T) {
 	}
 
 	// undeploy
-	revisionDeployment, resp, e = client.Proxies.Undeploy(proxyName, env, proxyRev.Revision)
+	revisionDeployment, resp, e := client.Proxies.Undeploy(proxyName, env, proxyRev.Revision)
 	if e != nil {
 		t.Errorf("while undeploying, error:\n%#v\n", e)
 		return
@@ -465,7 +465,7 @@ func TestProxyDeleteFail(t *testing.T) {
 	t.Logf("deployed: %#v\n", deployment)
 	wait(1)
 	t.Logf("attempting delete %#v", proxyName)
-	deletedItem, resp, e := client.Proxies.Delete(proxyName)
+	_, resp, e = client.Proxies.Delete(proxyName)
 	if e == nil {
 		t.Errorf("while attempting delete, expected an error\n")
 		return
@@ -477,7 +477,7 @@ func TestProxyDeleteFail(t *testing.T) {
 	defer resp.Body.Close()
 
 	// undeploy
-	deployment, resp, e = client.Proxies.Undeploy(proxyName, env, proxyRev.Revision)
+	_, resp, e = client.Proxies.Undeploy(proxyName, env, proxyRev.Revision)
 	if e != nil {
 		t.Errorf("while undeploying, error:\n%#v\n", e)
 		return
@@ -491,7 +491,7 @@ func TestProxyDeleteFail(t *testing.T) {
 
 	// then delete succeeds
 	t.Logf("attempting delete %#v", proxyName)
-	deletedItem, resp, e = client.Proxies.Delete(proxyName)
+	deletedItem, resp, e := client.Proxies.Delete(proxyName)
 	if e != nil {
 		t.Errorf("while deleting, error:\n%#v\n", e)
 		return

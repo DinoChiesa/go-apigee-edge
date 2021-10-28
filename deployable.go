@@ -186,7 +186,7 @@ func zipDirectory(source string, target string, filter func(string) bool) error 
 				return err
 			}
 			defer file.Close()
-			_, err = io.Copy(writer, file)
+			io.Copy(writer, file)
 		}
 		return err
 	})
@@ -207,7 +207,7 @@ func (s *Deployable) Import(client *ApigeeClient, uriPathElement, assetName, sou
 		}
 		tempDir, e := ioutil.TempDir("", "go-apigee-")
 		if e != nil {
-			return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
+			return nil, nil, fmt.Errorf("while creating temp dir, error: %#v", e)
 		}
 		zipfileName = path.Join(tempDir, "bundle.zip")
 		var filePathElement string
@@ -219,7 +219,7 @@ func (s *Deployable) Import(client *ApigeeClient, uriPathElement, assetName, sou
 
 		e = zipDirectory(path.Join(source, filePathElement), zipfileName, smartFilter)
 		if e != nil {
-			return nil, nil, errors.New(fmt.Sprintf("while creating temp dir, error: %#v", e))
+			return nil, nil, fmt.Errorf("while creating temp dir, error: %#v", e)
 		}
 		fmt.Printf("zipped %s into %s\n\n", source, zipfileName)
 		cleanup := func(filename string) {
@@ -235,7 +235,7 @@ func (s *Deployable) Import(client *ApigeeClient, uriPathElement, assetName, sou
 		return nil, nil, errors.New("source must be a zipfile")
 	}
 
-	info, err = os.Stat(zipfileName)
+	_, err = os.Stat(zipfileName)
 	if err != nil {
 		return nil, nil, err
 	}

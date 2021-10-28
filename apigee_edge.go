@@ -14,13 +14,11 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"reflect"
 
 	//"strconv"
 	//"time"
 
 	"github.com/bgentry/go-netrc/netrc"
-	"github.com/google/go-querystring/query"
 )
 
 const (
@@ -41,33 +39,6 @@ type RequestCompletionCallback func(*http.Request, *http.Response)
 type ListOptions struct {
 	// to ask for expanded results
 	Expand bool `url:"expand"`
-}
-
-func addOptions(s string, opt interface{}) (string, error) {
-	v := reflect.ValueOf(opt)
-
-	if v.Kind() == reflect.Ptr && v.IsNil() {
-		return s, nil
-	}
-
-	origURL, err := url.Parse(s)
-	if err != nil {
-		return s, err
-	}
-
-	origValues := origURL.Query()
-
-	newValues, err := query.Values(opt)
-	if err != nil {
-		return s, err
-	}
-
-	for k, v := range newValues {
-		origValues[k] = v
-	}
-
-	origURL.RawQuery = origValues.Encode()
-	return origURL.String(), nil
 }
 
 func retrieveAuthFromNetrc(netrcPath, host string) (*AdminAuth, error) {
@@ -202,18 +173,18 @@ func (c *ApigeeClient) NewRequest(method, urlStr string, body interface{}) (*htt
 
 	var req *http.Request
 	if body != nil {
-		switch body.(type) {
+		switch b := body.(type) { //
 		default:
 			ctype = appJson
 			buf := new(bytes.Buffer)
-			e := json.NewEncoder(buf).Encode(body)
+			e := json.NewEncoder(buf).Encode(b)
 			if e != nil {
 				return nil, e
 			}
-			req, e = http.NewRequest(method, u.String(), buf)
+			req, _ = http.NewRequest(method, u.String(), buf)
 		case io.Reader:
 			ctype = octetStream
-			req, e = http.NewRequest(method, u.String(), body.(io.Reader))
+			req, e = http.NewRequest(method, u.String(), b)
 		}
 	} else {
 		req, e = http.NewRequest(method, u.String(), nil)

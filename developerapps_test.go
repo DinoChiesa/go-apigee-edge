@@ -30,7 +30,7 @@ func randomAppFromTemplate() (DeveloperApp, error) {
 
 func TestDeveloperAppCreateDelete(t *testing.T) {
 	client := NewClientForTesting(t)
-	dev, e := randomDeveloperFromTemplate()
+	dev, _ := randomDeveloperFromTemplate()
 	createdDeveloper, resp, e := client.Developers.Create(dev)
 	if e != nil {
 		t.Errorf("while creating Edge developer, error:\n%#v\n", e)
@@ -53,9 +53,9 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 	wait(1)
 
 	devapps := client.Developers.Apps(createdDeveloper.Email)
-	devapp, e := randomAppFromTemplate()
+	devapp, _ := randomAppFromTemplate()
 
-	createdApp, resp, e := devapps.Create(devapp)
+	createdApp, _, e := devapps.Create(devapp)
 	if e != nil {
 		t.Errorf("while creating developer app, error:\n%#v\n", e)
 		return
@@ -64,7 +64,7 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 
 	wait(1)
 
-	resp, e = devapps.Revoke(createdApp.Name)
+	_, e = devapps.Revoke(createdApp.Name)
 	if e != nil {
 		t.Errorf("while revoking developer app, error:\n%#v\n", e)
 		return
@@ -72,7 +72,7 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 	t.Logf("RevokeApp")
 	wait(1)
 
-	got, resp, e := devapps.Get(createdApp.Name)
+	got, _, e := devapps.Get(createdApp.Name)
 	if e != nil {
 		t.Errorf("while getting developer app, error:\n%#v\n", e)
 		return
@@ -85,7 +85,7 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 	}
 	t.Logf("GetApp")
 
-	resp, e = devapps.Approve(createdApp.Name)
+	_, e = devapps.Approve(createdApp.Name)
 	if e != nil {
 		t.Errorf("while approving developer app, error:\n%#v\n", e)
 		return
@@ -94,7 +94,7 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 
 	wait(1)
 
-	got, resp, e = devapps.Get(createdApp.Name)
+	got, _, e = devapps.Get(createdApp.Name)
 	if e != nil {
 		t.Errorf("while getting developer app, error:\n%#v\n", e)
 		return
@@ -107,7 +107,7 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 	}
 	t.Logf("GetApp")
 
-	deletedApp, resp, e := devapps.Delete(createdApp.Name)
+	deletedApp, _, e := devapps.Delete(createdApp.Name)
 	if e != nil {
 		t.Errorf("while creating developer app, error:\n%#v\n", e)
 		return

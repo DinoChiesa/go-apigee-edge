@@ -15,8 +15,6 @@ const (
 	testConfigFile = "testdata/test_config.json"
 )
 
-var apigeeClient ApigeeClient
-
 var testSettings struct {
 	Orgname string `json:"orgname"`
 	Notes   string `json:"notes"`

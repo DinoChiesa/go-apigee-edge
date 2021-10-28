@@ -38,7 +38,7 @@ func randomDeveloperFromTemplate() (Developer, error) {
 
 func TestDeveloperCreateDelete(t *testing.T) {
 	client := NewClientForTesting(t)
-	dev, e := randomDeveloperFromTemplate()
+	dev, _ := randomDeveloperFromTemplate()
 	createdDeveloper, resp, e := client.Developers.Create(dev)
 	if e != nil {
 		t.Errorf("while creating Edge developer, error:\n%#v\n", e)
@@ -49,7 +49,7 @@ func TestDeveloperCreateDelete(t *testing.T) {
 
 	wait(1)
 
-	deletedDeveloper, resp, e := client.Developers.Delete(createdDeveloper.Email)
+	deletedDeveloper, _, e := client.Developers.Delete(createdDeveloper.Email)
 	if e != nil {
 		t.Errorf("while deleting Edge developer, error:\n%#v\n", e)
 		return
@@ -88,7 +88,7 @@ func TestDeveloperGet(t *testing.T) {
 
 func TestDeveloperUpdate(t *testing.T) {
 	client := NewClientForTesting(t)
-	dev, e := randomDeveloperFromTemplate()
+	dev, _ := randomDeveloperFromTemplate()
 	createdDeveloper, _, e := client.Developers.Create(dev)
 	if e != nil {
 		t.Errorf("while creating Edge developer, error:\n%#v\n", e)

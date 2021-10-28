@@ -40,5 +40,5 @@ func (span *Timespan) UnmarshalJSON(b []byte) error {
 }
 
 func (span Timespan) String() string {
-	return span.String()
+	return span.Duration.String()
 }

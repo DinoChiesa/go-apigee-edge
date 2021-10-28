@@ -47,7 +47,7 @@ func randomProductFromTemplate(proxyname string) (ApiProduct, error) {
 
 func TestProductCreateDelete(t *testing.T) {
 	client := NewClientForTesting(t)
-	namelist, resp, e := client.Proxies.List()
+	namelist, _, e := client.Proxies.List()
 	if e != nil {
 		t.Errorf("while listing proxies, error:\n%#v\n", e)
 		return
@@ -59,7 +59,7 @@ func TestProductCreateDelete(t *testing.T) {
 
 	selectedProxy := namelist[rand.Intn(len(namelist))]
 
-	product, e := randomProductFromTemplate(selectedProxy)
+	product, _ := randomProductFromTemplate(selectedProxy)
 	createdProduct, resp, e := client.Products.Create(product)
 	if e != nil {
 		t.Errorf("while creating Apigee product, error:\n%#v\n", e)
@@ -70,7 +70,7 @@ func TestProductCreateDelete(t *testing.T) {
 
 	wait(1)
 
-	deletedProduct, resp, e := client.Products.Delete(createdProduct.Name)
+	deletedProduct, _, e := client.Products.Delete(createdProduct.Name)
 	if e != nil {
 		t.Errorf("while deleting Apigee product, error:\n%#v\n", e)
 		return

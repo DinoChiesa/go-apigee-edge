@@ -91,7 +91,7 @@ func TestTimestamp_MarshalReflexivity(t *testing.T) {
 			t.Errorf("%s: Marshal err=%v", tc.desc, err)
 		}
 		var got Timestamp
-		err = json.Unmarshal(data, &got)
+		json.Unmarshal(data, &got)
 		t.Logf("%s: %+v ?= %s", tc.desc, got, string(data))
 		if got.String() != tc.data.String() {
 			t.Errorf("%s: %+v != %+v", tc.desc, got, data)
