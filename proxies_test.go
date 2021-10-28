@@ -1,14 +1,14 @@
 package apigee
 
 import (
-  "testing"
-	"io/ioutil"
-  "path"
-  "os"
-  "time"
-  "strings"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"os"
+	"path"
+	"strings"
+	"testing"
+	"time"
 )
 
 const (
@@ -19,7 +19,7 @@ func getProxyZipFiles(t *testing.T) []os.FileInfo {
 	entries, e := ioutil.ReadDir(proxyBundleDir)
 	if e != nil {
 		t.Errorf("while reading testdata directory, error:\n%#v\n", e)
-    return nil
+		return nil
 	}
 
 	zipfiles := []os.FileInfo{}
@@ -31,47 +31,45 @@ func getProxyZipFiles(t *testing.T) []os.FileInfo {
 
 	if len(zipfiles) <= 1 {
 		t.Errorf("not enough zipfiles in the proxyBundles directory, error:\n%#v\n", e)
-    return nil
+		return nil
 	}
 	return zipfiles
 }
-
 
 func getProxyBundleDirectories(t *testing.T) []os.FileInfo {
 	entries, e := ioutil.ReadDir(proxyBundleDir)
 	if e != nil {
 		t.Errorf("while reading testdata directory, error:\n%#v\n", e)
-    return nil
+		return nil
 	}
 
 	directories := []os.FileInfo{}
 	for i := range entries {
-		if (!strings.HasSuffix(entries[i].Name(), ".zip")) {
+		if !strings.HasSuffix(entries[i].Name(), ".zip") {
 			directories = append(directories, entries[i])
 		}
 	}
 
 	if len(directories) <= 1 {
 		t.Errorf("not enough directories in the proxyBundles directory, error:\n%#v\n", e)
-    return nil
+		return nil
 	}
 
 	return directories
 }
 
-
 func getEnvironments(t *testing.T, client *ApigeeClient) []string {
-// get environments
-  envlist, resp, e := client.Environments.List()
-  if e != nil {
+	// get environments
+	envlist, resp, e := client.Environments.List()
+	if e != nil {
 		t.Errorf("while listing environments, error:\n%#v\n", e)
-    return nil
-  }
+		return nil
+	}
 	defer resp.Body.Close()
-  if len(envlist) <= 0 {
+	if len(envlist) <= 0 {
 		t.Errorf("no environments found")
-    return nil
-  }
+		return nil
+	}
 
 	filteredEnvList := []string{}
 	for i := range envlist {
@@ -90,7 +88,7 @@ func TestProxyImportFromZip(t *testing.T) {
 		now.Hour(), now.Minute(), now.Second())
 
 	zipfiles := getProxyZipFiles(t)
-  client := NewClientForTesting(t)
+	client := NewClientForTesting(t)
 
 	for _, zipfile := range zipfiles {
 		fullFileName := path.Join(proxyBundleDir, zipfile.Name())
@@ -112,9 +110,8 @@ func TestProxyImportFromZip(t *testing.T) {
 	}
 }
 
-
 func TestProxyImportFromDir(t *testing.T) {
-  client := NewClientForTesting(t)
+	client := NewClientForTesting(t)
 
 	now := time.Now()
 	timestamp := fmt.Sprintf("%d%02d%02d-%02d%02d%02d",
@@ -142,39 +139,38 @@ func TestProxyImportFromDir(t *testing.T) {
 	}
 }
 
-
 func TestProxyList(t *testing.T) {
-  client := NewClientForTesting(t)
+	client := NewClientForTesting(t)
 
 	proxies, resp, e := client.Proxies.List()
 	if e != nil {
 		t.Errorf("while listing proxies, error:\n%#v\n", e)
-    return
+		return
 	}
 	defer resp.Body.Close()
 	if resp.Status != "200 OK" {
 		t.Errorf("while listing, status: %#v\n", resp.Status)
 		return
 	}
-	if len(proxies) ==0 {
+	if len(proxies) == 0 {
 		t.Errorf("no proxies returned while listing")
 		return
 	}
 }
 
 func TestProxyGet(t *testing.T) {
-  client := NewClientForTesting(t)
+	client := NewClientForTesting(t)
 	proxies, resp, e := client.Proxies.List()
 	if e != nil {
 		t.Errorf("while listing proxies, error:\n%#v\n", e)
-    return
+		return
 	}
 	defer resp.Body.Close()
 	if resp.Status != "200 OK" {
 		t.Errorf("while listing, status: %#v\n", resp.Status)
 		return
 	}
-	if len(proxies) ==0 {
+	if len(proxies) == 0 {
 		t.Errorf("no proxies returned while listing")
 		return
 	}
@@ -205,8 +201,8 @@ func TestProxyGet(t *testing.T) {
 
 type ImportedProxyStruct struct {
 	proxyName string
-	env string
-	rev Revision
+	env       string
+	rev       Revision
 }
 
 func TestProxyDeployUndeploy(t *testing.T) {
@@ -215,7 +211,7 @@ func TestProxyDeployUndeploy(t *testing.T) {
 		now.Year(), now.Month(), now.Day(),
 		now.Hour(), now.Minute(), now.Second())
 
-  client := NewClientForTesting(t)
+	client := NewClientForTesting(t)
 	zipfiles := getProxyZipFiles(t)
 	environmentList := getEnvironments(t, client)
 	importedProxies := []ImportedProxyStruct{}
@@ -238,7 +234,7 @@ func TestProxyDeployUndeploy(t *testing.T) {
 
 		randomPath := fmt.Sprintf("/%s-deploy", timestamp)
 		env := environmentList[rand.Intn(len(environmentList))]
-		importedProxies = append(importedProxies, ImportedProxyStruct{proxyName:proxyName, env:env, rev:proxyRev.Revision})
+		importedProxies = append(importedProxies, ImportedProxyStruct{proxyName: proxyName, env: env, rev: proxyRev.Revision})
 		deployment, resp, e := client.Proxies.DeployAtPath(proxyName, randomPath, env, proxyRev.Revision)
 		if e != nil {
 			t.Errorf("while deploying, error:\n%#v\n", e)
@@ -267,13 +263,12 @@ func TestProxyDeployUndeploy(t *testing.T) {
 	}
 }
 
-
 func TestProxyInquireDeployment(t *testing.T) {
 	now := time.Now()
 	timestamp := fmt.Sprintf("%d%02d%02d-%02d%02d%02d",
 		now.Year(), now.Month(), now.Day(),
 		now.Hour(), now.Minute(), now.Second())
-  client := NewClientForTesting(t)
+	client := NewClientForTesting(t)
 	zipfiles := getProxyZipFiles(t)
 	selectedZip := zipfiles[rand.Intn(len(zipfiles))]
 	environmentList := getEnvironments(t, client)
@@ -356,13 +351,12 @@ func TestProxyInquireDeployment(t *testing.T) {
 	t.Logf("undeployed: %#v\n", revisionDeployment)
 }
 
-
 func TestProxyDelete(t *testing.T) {
-  client := NewClientForTesting(t)
+	client := NewClientForTesting(t)
 	proxies, resp, e := client.Proxies.List()
 	if e != nil {
 		t.Errorf("while listing proxies, error:\n%#v\n", e)
-    return
+		return
 	}
 	defer resp.Body.Close()
 	if resp.Status != "200 OK" {
@@ -430,14 +424,13 @@ func TestProxyDelete(t *testing.T) {
 	}
 }
 
-
 func TestProxyDeleteFail(t *testing.T) {
 	now := time.Now()
 	timestamp := fmt.Sprintf("%d%02d%02d-%02d%02d%02d",
 		now.Year(), now.Month(), now.Day(),
 		now.Hour(), now.Minute(), now.Second())
 
-  client := NewClientForTesting(t)
+	client := NewClientForTesting(t)
 	zipfiles := getProxyZipFiles(t)
 	selectedZip := zipfiles[rand.Intn(len(zipfiles))]
 	environmentList := getEnvironments(t, client)

@@ -1,8 +1,8 @@
 package apigee
 
 import (
-  "encoding/json"
-  "testing"
+	"encoding/json"
+	"testing"
 )
 
 const (
@@ -28,15 +28,14 @@ func randomAppFromTemplate() (DeveloperApp, error) {
 	return got, e
 }
 
-
 func TestDeveloperAppCreateDelete(t *testing.T) {
-  client := NewClientForTesting(t)
+	client := NewClientForTesting(t)
 	dev, e := randomDeveloperFromTemplate()
-  createdDeveloper, resp, e := client.Developers.Create(dev)
-  if e != nil {
+	createdDeveloper, resp, e := client.Developers.Create(dev)
+	if e != nil {
 		t.Errorf("while creating Edge developer, error:\n%#v\n", e)
-    return
-  }
+		return
+	}
 	t.Logf("Create: got=%+v", createdDeveloper)
 	t.Logf("resp: got=%+v", resp)
 
@@ -51,70 +50,70 @@ func TestDeveloperAppCreateDelete(t *testing.T) {
 	}
 
 	defer teardown(t)
-  wait(1)
+	wait(1)
 
 	devapps := client.Developers.Apps(createdDeveloper.Email)
 	devapp, e := randomAppFromTemplate()
 
-  createdApp, resp, e := devapps.Create(devapp)
-  if e != nil {
+	createdApp, resp, e := devapps.Create(devapp)
+	if e != nil {
 		t.Errorf("while creating developer app, error:\n%#v\n", e)
-    return
-  }
+		return
+	}
 	t.Logf("CreateApp: got=%v", createdApp)
 
-  wait(1)
+	wait(1)
 
-  resp, e = devapps.Revoke(createdApp.Name)
-  if e != nil {
+	resp, e = devapps.Revoke(createdApp.Name)
+	if e != nil {
 		t.Errorf("while revoking developer app, error:\n%#v\n", e)
-    return
-  }
+		return
+	}
 	t.Logf("RevokeApp")
 	wait(1)
 
-  got, resp, e := devapps.Get(createdApp.Name)
-  if e != nil {
+	got, resp, e := devapps.Get(createdApp.Name)
+	if e != nil {
 		t.Errorf("while getting developer app, error:\n%#v\n", e)
-    return
-  }
-	if (got.Name != createdApp.Name) {
+		return
+	}
+	if got.Name != createdApp.Name {
 		t.Errorf("inconsistent name")
 	}
-	if (got.Status != "revoked") {
+	if got.Status != "revoked" {
 		t.Errorf("inconsistent status")
 	}
 	t.Logf("GetApp")
 
-  resp, e = devapps.Approve(createdApp.Name)
-  if e != nil {
+	resp, e = devapps.Approve(createdApp.Name)
+	if e != nil {
 		t.Errorf("while approving developer app, error:\n%#v\n", e)
-    return
-  }
+		return
+	}
 	t.Logf("ApproveApp")
 
 	wait(1)
 
 	got, resp, e = devapps.Get(createdApp.Name)
-  if e != nil {
+	if e != nil {
 		t.Errorf("while getting developer app, error:\n%#v\n", e)
-    return
-  }
-	if (got.Name != createdApp.Name) {
+		return
+	}
+	if got.Name != createdApp.Name {
 		t.Errorf("inconsistent name")
 	}
-	if (got.Status != "approved") {
+	if got.Status != "approved" {
 		t.Errorf("inconsistent status")
 	}
 	t.Logf("GetApp")
 
-  deletedApp, resp, e := devapps.Delete(createdApp.Name)
-  if e != nil {
+	deletedApp, resp, e := devapps.Delete(createdApp.Name)
+	if e != nil {
 		t.Errorf("while creating developer app, error:\n%#v\n", e)
-    return
-  }
+		return
+	}
 	t.Logf("DeleteApp: got=%v", deletedApp)
 
-  wait(1)
+	wait(1)
 
 }

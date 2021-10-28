@@ -1,17 +1,17 @@
 package apigee
 
 import (
-	"io/ioutil"
-	"encoding/json"
 	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"os/user"
-  "net/url"
-	"net/http"
-	"fmt"
-	"time"
 	"path"
 	"strings"
+	"time"
 )
 
 const (
@@ -20,36 +20,36 @@ const (
 
 type ISOTimes struct {
 	IssuedAt string `json:"issued_at,omitempty"`
-	Expires string `json:"expires,omitempty"`
+	Expires  string `json:"expires,omitempty"`
 }
 
 type AuthToken struct {
-	AccessToken *string `json:"access_token,omitempty"`
-	RefreshToken *string `json:"refresh_token,omitempty"`
-	TokenType *string `json:"token_type,omitempty"`
-	Lifetime int64 `json:"expires_in,omitempty"`
-	Expires int64 `json:"expires,omitempty"`
-  Scope *string `json:"scope,omitempty"`
-  Id *string `json:"jti,omitempty"`
-	IssuedAt int64 `json:"issued_at,omitempty"`
-	ISO *ISOTimes `json:"ISO,omitempty"`
+	AccessToken  *string   `json:"access_token,omitempty"`
+	RefreshToken *string   `json:"refresh_token,omitempty"`
+	TokenType    *string   `json:"token_type,omitempty"`
+	Lifetime     int64     `json:"expires_in,omitempty"`
+	Expires      int64     `json:"expires,omitempty"`
+	Scope        *string   `json:"scope,omitempty"`
+	Id           *string   `json:"jti,omitempty"`
+	IssuedAt     int64     `json:"issued_at,omitempty"`
+	ISO          *ISOTimes `json:"ISO,omitempty"`
 }
 
 func resolveAnyTildes(v string) string {
 	usr, _ := user.Current()
 	dir := usr.HomeDir
 	if strings.HasPrefix(v, "~/") {
-    v = path.Join(dir, v[2:])
-	}	else if v == "~" {
-    v = dir
+		v = path.Join(dir, v[2:])
+	} else if v == "~" {
+		v = dir
 	}
 	return v
 }
 
 func ReadTokenStash() (map[string]*AuthToken, error) {
 	filepath := resolveAnyTildes(tokenStashFile)
-   _, e := os.Stat(filepath)
-  if os.IsNotExist(e) {
+	_, e := os.Stat(filepath)
+	if os.IsNotExist(e) {
 		fmt.Printf("token stash file does not exist\n")
 		return make(map[string]*AuthToken), nil
 	}
@@ -66,15 +66,14 @@ func ReadTokenStash() (map[string]*AuthToken, error) {
 	return tokenStash, e
 }
 
-
 func tokenStashKey(c *ApigeeClient) string {
 	key := c.auth.Username + "##" + c.BaseURL.String() + "##" + getLoginBaseUrl(c)
 	//fmt.Printf("token stash key: %s\n", key)
-  return key
+	return key
 }
 
 func CurrentToken(c *ApigeeClient) (*AuthToken, error) {
-  stash, e := ReadTokenStash()
+	stash, e := ReadTokenStash()
 	if e != nil {
 		return nil, e
 	}
@@ -94,14 +93,14 @@ func IsInvalidOrExpired(token *AuthToken) bool {
 	adjustmentInMilliseconds := int64(30 * 1000)
 	adjustedNow := nowSecondsSinceEpoch + adjustmentInMilliseconds
 	invalidOrExpired := (token.Expires < adjustedNow)
-  return invalidOrExpired
+	return invalidOrExpired
 }
 
 func enhanceToken(token *AuthToken) *AuthToken {
-  var iso ISOTimes
-  if token.AccessToken != nil {
+	var iso ISOTimes
+	if token.AccessToken != nil {
 		parts := strings.Split(*token.AccessToken, ",")
-    if len(parts) == 3 {
+		if len(parts) == 3 {
 			var payload []byte
 			payload, e := base64.RawStdEncoding.DecodeString(parts[1])
 			if e == nil {
@@ -114,20 +113,20 @@ func enhanceToken(token *AuthToken) *AuthToken {
 					if val, ok := claims["iat"]; ok {
 						v := val.(int64)
 						t := time.Unix(v, 0)
-						token.IssuedAt = t.UnixNano() / (int64(time.Millisecond)/int64(time.Nanosecond))
+						token.IssuedAt = t.UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 						iso.IssuedAt = t.Format(time.RFC3339)
 					}
 					if val, ok := claims["exp"]; ok {
 						v := val.(int64)
 						t := time.Unix(v, 0)
-						v = t.UnixNano() / (int64(time.Millisecond)/int64(time.Nanosecond))
+						v = t.UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 						v2 := int64(claims["iat"].(int64))
 						token.Lifetime = v - v2
 						token.Expires = v
 						iso.Expires = t.Format(time.RFC3339)
 					}
 				}
-      }
+			}
 		} else {
 			// not a JWT; probably a googleapis opaque oauth token
 			if token.IssuedAt != 0 {
@@ -135,25 +134,24 @@ func enhanceToken(token *AuthToken) *AuthToken {
 				t := time.Unix(0, v)
 				iso.IssuedAt = t.Format(time.RFC3339)
 				if token.Lifetime != 0 {
-					t := time.Unix(0, (token.IssuedAt + token.Lifetime * 1000) * int64(time.Millisecond))
-					token.Expires = t.UnixNano() / (int64(time.Millisecond)/int64(time.Nanosecond))
+					t := time.Unix(0, (token.IssuedAt+token.Lifetime*1000)*int64(time.Millisecond))
+					token.Expires = t.UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 					iso.Expires = t.Format(time.RFC3339)
 				}
 			}
 		}
-  }
-  token.ISO = &iso;
-  return token;
+	}
+	token.ISO = &iso
+	return token
 }
 
-
 func StashToken(c *ApigeeClient, newToken *AuthToken) (map[string]*AuthToken, error) {
-  stash, e := ReadTokenStash()
+	stash, e := ReadTokenStash()
 	if e != nil {
 		return nil, e
 	}
 	key := tokenStashKey(c)
-	stash[key] = newToken;  // possibly overwrite an existing entry
+	stash[key] = newToken // possibly overwrite an existing entry
 
 	keptTokens := make(map[string]*AuthToken)
 	for key, element := range stash {
@@ -168,13 +166,13 @@ func StashToken(c *ApigeeClient, newToken *AuthToken) (map[string]*AuthToken, er
 	}
 
 	filename := resolveAnyTildes(tokenStashFile)
- 	file, e := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_RDWR, 0600)
+	file, e := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_RDWR, 0600)
 	if e != nil {
 		return keptTokens, e
 	}
 	defer file.Close()
 	file.Write(json)
-  return keptTokens, nil
+	return keptTokens, nil
 }
 
 func GetToken(c *ApigeeClient) (*AuthToken, error) {
@@ -207,7 +205,7 @@ func GetNewToken(c *ApigeeClient) (*AuthToken, error) {
 	form.Add("username", c.auth.Username)
 	form.Add("password", c.auth.Password)
 
-	req, e := http.NewRequest("POST", loginBaseUrl + "/oauth/token", strings.NewReader(form.Encode()))
+	req, e := http.NewRequest("POST", loginBaseUrl+"/oauth/token", strings.NewReader(form.Encode()))
 
 	// This method always tries to directly login to apigee IDP.
 	// TODO: add support for 2FA and for Apigee SSO.
@@ -220,18 +218,18 @@ func GetNewToken(c *ApigeeClient) (*AuthToken, error) {
 	//     formparams = merge(formparams, { mfa_token: arg1.mfa_token });
 	// }
 
-  if e != nil {
-    return nil, e
-  }
+	if e != nil {
+		return nil, e
+	}
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-  req.Header.Add("Accept", "application/json")
-  req.Header.Add("Authorization", "Basic ZWRnZWNsaTplZGdlY2xpc2VjcmV0")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", "Basic ZWRnZWNsaTplZGdlY2xpc2VjcmV0")
 	var v AuthToken
 	_, e = c.Do(req, &v)
-  if e != nil {
-    return nil, e // errors.Wrap(e, "while getting new token:")
-  }
+	if e != nil {
+		return nil, e // errors.Wrap(e, "while getting new token:")
+	}
 	v.IssuedAt = time.Now().Unix() * 1000
 	v.Expires = v.IssuedAt + v.Lifetime*1000
 	c.auth.Token = *v.AccessToken
