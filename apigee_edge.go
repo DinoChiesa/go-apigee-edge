@@ -3,6 +3,7 @@ package apigee
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,6 +20,7 @@ import (
 	//"time"
 
 	"github.com/bgentry/go-netrc/netrc"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -205,7 +207,8 @@ func (c *ApigeeClient) NewRequest(method, urlStr string, body interface{}) (*htt
 	req.Header.Add("User-Agent", c.UserAgent)
 
 	if c.WantToken {
-		token, e := c.TokenSource.GetToken(req.Context())
+		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, c.Options.HttpClient)
+		token, e := c.TokenSource.GetToken(ctx)
 		if e != nil {
 			return nil, e
 		}
