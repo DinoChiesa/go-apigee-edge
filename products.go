@@ -2,6 +2,7 @@ package apigee
 
 import (
 	"errors"
+	"net/url"
 	"path"
 )
 
@@ -10,7 +11,7 @@ const productsPath = "apiproducts"
 // ProductsService is an interface for interfacing with the Apigee Edge Admin API
 // dealing with apiproducts.
 type ProductsService interface {
-	List() ([]string, *Response, error)
+	List(query url.Values) ([]string, *Response, error)
 	Get(string) (*ApiProduct, *Response, error)
 	Create(ApiProduct) (*ApiProduct, *Response, error)
 	Update(ApiProduct) (*ApiProduct, *Response, error)
@@ -112,11 +113,20 @@ func (s *ProductsServiceOp) Delete(productName string) (*ApiProduct, *Response, 
 }
 
 // List retrieves the list of apiproduct names for the organization referred by the ApigeeClient.
-func (s *ProductsServiceOp) List() ([]string, *Response, error) {
+func (s *ProductsServiceOp) List(query url.Values) ([]string, *Response, error) {
 	req, e := s.client.NewRequest("GET", productsPath, nil)
 	if e != nil {
 		return nil, nil, e
 	}
+
+	for key, values := range req.URL.Query() {
+		for _, value := range values {
+			query.Add(key, value)
+		}
+	}
+
+	req.URL.RawQuery = query.Encode()
+
 	namelist := make([]string, 0)
 	resp, e := s.client.Do(req, &namelist)
 	if e != nil {
